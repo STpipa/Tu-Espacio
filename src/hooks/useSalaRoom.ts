@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getStateCallbacks, type Room } from "colyseus.js";
 import { colyseusClient, resolverRoomId } from "../lib/colyseus";
 import { supabase } from "../lib/supabase";
+import { useAuth } from "../contexts/AuthContext";
+import { registrarAsistenciaSiHaceFalta } from "../lib/monetizacion";
 
 export interface JugadorSala {
   sessionId: string;
@@ -52,6 +54,7 @@ function snapshotJugador(sessionId: string, j: any): JugadorSala {
 
 export function useSalaRoom(codigoAcceso: string | undefined) {
   const roomRef = useRef<Room | null>(null);
+  const { profile } = useAuth();
   const [estado, setEstado] = useState<EstadoSala>({
     conectando: true,
     error: null,
@@ -120,6 +123,13 @@ export function useSalaRoom(codigoAcceso: string | undefined) {
           conectando: false,
           miSessionId: room.sessionId,
         }));
+
+        // Cuenta como "asistencia" del mes para el límite gratis de
+        // clientes. Curadores/super_admin entrando a su propia sala no
+        // gastan nada.
+        if (profile?.role === "cliente") {
+          registrarAsistenciaSiHaceFalta(profile.id).catch(() => {});
+        }
       } catch (err) {
         if (!activo) return;
         setEstado((prev) => ({

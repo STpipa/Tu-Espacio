@@ -12,6 +12,8 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 import { colors } from "../lib/theme";
+import { puedeCrearSala } from "../lib/monetizacion";
+import { verificarSuscripcionActiva } from "../lib/revenuecat";
 import type { RootStackParamList } from "../navigation/RootNavigator";
 
 interface Sala {
@@ -64,6 +66,15 @@ export default function CuradorScreen() {
     if (!profile) return;
     setCreating(true);
     setErrorMsg(null);
+
+    const suscripcionActiva = await verificarSuscripcionActiva(profile.id);
+    if (!puedeCrearSala(profile, suscripcionActiva)) {
+      setCreating(false);
+      setErrorMsg(
+        "Necesitás una suscripción activa (o estar exento de pago) para crear salas."
+      );
+      return;
+    }
 
     const { error } = await supabase.from("salas_3d").insert({
       curador_id: profile.id,

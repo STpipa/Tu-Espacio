@@ -116,6 +116,12 @@ Todavía **no hay credenciales reales** (2026-07-27). Convenciones a seguir:
   - Probado a mano por el usuario con dos ventanas de navegador (una normal + una de incógnito, porque dos pestañas normales comparten sesión): funcionó, vio los dos avatares, la moderación, y reportó que las flechas de movimiento quedaban tapadas por el panel de jugadores — se arregló (las flechas ahora están dentro de su propio contenedor `flex:1` en vez de posicionarse relativas a toda la pantalla).
   - **Incidente:** en un momento los dos servidores de desarrollo (Expo web y Colyseus) quedaron colgados sin escuchar en su puerto (probablemente por correr en ventanas de PowerShell separadas y desatendidas cuya salida no se podía inspeccionar). Desde entonces se corren como procesos en segundo plano con logs legibles en vez de ventanas nuevas — más fácil de diagnosticar si vuelve a pasar.
   - **Todavía no implementado (fuera del alcance de este paso, a propósito):** audio real y chat de texto — "silenciar" hoy es solo una bandera de estado (`silenciado`) sin ningún pipeline de audio/WebRTC detrás, lista para conectarse cuando se decida entre LiveKit/Agora (ver sección de stack). Tampoco hay reconexión automática si se corta la conexión a Colyseus.
+- **2026-07-27:** **Paso D completado y probado (monetización + bypass de pagos), decisión: RevenueCat se cablea de código ya, cuenta real queda para después.**
+  - **Fix de seguridad primero (prerrequisito real, no cosmético):** durante las pruebas del Paso C se detectó que la RLS de `profiles` dejaba que cualquier usuario cambiara su propio `role`/`exento_pago` desde el cliente — si no se arreglaba, todo el gating de este paso hubiera sido trivial de saltear. Se restringió a nivel de columna (`revoke update ... grant update (avatar_config) ...`, en `supabase/schema_paso_d.sql`), verificado con un test que confirma `permission denied` al intentar auto-ascenderse, y que `avatar_config` se sigue pudiendo editar normalmente.
+  - `src/lib/monetizacion.ts`: `puedeCrearSala()` (super_admin, exento_pago, o suscripción activa), `puedeUnirseComoCliente()` (bloquea a los `cliente` sin exención después de 2 asistencias distintas en el mes), `registrarAsistenciaSiHaceFalta()` marca la asistencia del día (idempotente vía `unique(cliente_id, fecha_asistencia)` en la tabla nueva `sesiones_uso`).
+  - Conectado en `CuradorScreen` (chequeo antes de crear sala) y `ClienteScreen` (chequeo antes de unirse, más un contador "sesiones usadas este mes: X/2" visible). La asistencia se registra automáticamente al conectar de verdad a una sala (dentro de `useSalaRoom`), no al tocar el botón — así un código inválido no gasta una sesión.
+  - **RevenueCat:** el usuario eligió construir toda la lógica ahora y dejar la cuenta/SDK real para después. `src/lib/revenuecat.ts` es un módulo placeholder documentado (`verificarSuscripcionActiva()` siempre devuelve `false` por ahora) — **a propósito NO se instaló** `react-native-purchases` todavía, porque es un módulo nativo: instalarlo rompe la posibilidad de seguir probando con Expo Go/navegador tal cual veníamos haciendo, y pasa a necesitar un dev client propio (`expo prebuild` + EAS Build o build local). Cuando el usuario tenga cuenta de RevenueCat y quiera probarlo de verdad, activar esto es: instalar el paquete, configurar el entitlement, y reemplazar el cuerpo de esa única función.
+  - Validado con un script de prueba contra la base real (fix de seguridad, `avatar_config` sigue editable, `sesiones_uso` respeta el límite diario) + `tsc --noEmit` + `expo export --platform web`, todos sin errores.
 
 ## Cómo correr el proyecto en desarrollo
 Son **dos procesos separados** que hay que tener corriendo al mismo tiempo:
@@ -126,7 +132,7 @@ Son **dos procesos separados** que hay que tener corriendo al mismo tiempo:
 - [x] Paso A — Autenticación y roles (Supabase) — completo y probado
 - [x] Paso B — Entorno 3D y avatares modulares — completo, probado en web (falta probar en celular)
 - [x] Paso C — Sincronización en tiempo real y moderación — completo y probado (web, con dos ventanas)
-- [ ] Paso D — Monetización y bypass de pagos (en curso)
+- [x] Paso D — Monetización y bypass de pagos — completo y probado (código); RevenueCat real queda pendiente (ver abajo)
 - [ ] Paso E — Permisos, onboarding y preparación EAS
 - [ ] Pulir estilo visual del dashboard (curador/cliente) — pendiente, no urgente, pedido explícito del usuario para después
 - [ ] Evaluar reactivar "Confirm email" en Supabase antes de producción (hoy desactivado para pruebas)
@@ -134,7 +140,7 @@ Son **dos procesos separados** que hay que tener corriendo al mismo tiempo:
 - [ ] Conseguir/crear modelos `.glb` reales para `catalogo_avatares` y subirlos a Supabase Storage (hoy son placeholders de colores)
 - [ ] Decidir hosting real para el servidor de Colyseus cuando se salga de "solo mi máquina" (Colyseus Cloud tiene tier gratis; evaluar cuando haga falta)
 - [ ] Implementar audio real (WebRTC) para que "silenciar" tenga efecto de verdad — hoy es solo una bandera de estado
-- [ ] Nota de seguridad pendiente de revisar: la política RLS actual de `profiles` deja que un usuario actualice su propio `role` desde el cliente (se usó esto adrede para las cuentas de prueba automatizadas, pero en producción un cliente no debería poder auto-ascenderse a curador/super_admin) — conviene restringir esa columna antes de publicar
+- [ ] Crear cuenta real de RevenueCat + instalar `react-native-purchases` cuando se quiera probar suscripciones de verdad (implica pasar a un dev client, ya no alcanza Expo Go/navegador) — ver `src/lib/revenuecat.ts`
 
 ## 🔗 Relacionado
 - Nota espejo en Obsidian: `C:\Obsidian Vault\proyectos\tu-espacio.md`

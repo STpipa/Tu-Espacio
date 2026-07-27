@@ -1,9 +1,21 @@
-import React, { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuth } from "../contexts/AuthContext";
 import { colors } from "../lib/theme";
+import {
+  LIMITE_SESIONES_GRATIS_POR_MES,
+  contarSesionesEsteMes,
+  puedeUnirseComoCliente,
+} from "../lib/monetizacion";
 import type { RootStackParamList } from "../navigation/RootNavigator";
 
 export default function ClienteScreen() {
@@ -11,12 +23,43 @@ export default function ClienteScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [codigo, setCodigo] = useState("");
+  const [verificando, setVerificando] = useState(false);
+  const [errorAcceso, setErrorAcceso] = useState<string | null>(null);
+  const [sesionesUsadas, setSesionesUsadas] = useState<number | null>(null);
 
-  function unirseASala() {
+  const cargarSesionesUsadas = useCallback(async () => {
+    if (!profile) return;
+    try {
+      const usadas = await contarSesionesEsteMes(profile.id);
+      setSesionesUsadas(usadas);
+    } catch {
+      setSesionesUsadas(null);
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    cargarSesionesUsadas();
+  }, [cargarSesionesUsadas]);
+
+  async function unirseASala() {
     const limpio = codigo.trim().toUpperCase();
-    if (!limpio) return;
+    if (!limpio || !profile) return;
+
+    setVerificando(true);
+    setErrorAcceso(null);
+
+    const resultado = await puedeUnirseComoCliente(profile);
+
+    setVerificando(false);
+
+    if (!resultado.permitido) {
+      setErrorAcceso(resultado.motivo ?? "No podés unirte ahora.");
+      return;
+    }
     navigation.navigate("SalaEnVivo", { codigo: limpio });
   }
+
+  const sinLimite = profile?.role === "super_admin" || profile?.exento_pago;
 
   return (
     <View style={styles.container}>
@@ -31,6 +74,12 @@ export default function ClienteScreen() {
           Pedile el código de acceso a tu curador y entrá a la sesión en
           vivo.
         </Text>
+        {!sinLimite && sesionesUsadas !== null ? (
+          <Text style={styles.limiteTexto}>
+            Sesiones usadas este mes: {sesionesUsadas}/
+            {LIMITE_SESIONES_GRATIS_POR_MES}
+          </Text>
+        ) : null}
         <TextInput
           style={styles.input}
           placeholder="Código de sala"
@@ -39,8 +88,17 @@ export default function ClienteScreen() {
           value={codigo}
           onChangeText={setCodigo}
         />
-        <Pressable style={styles.avatarButton} onPress={unirseASala}>
-          <Text style={styles.avatarButtonText}>Unirme</Text>
+        {errorAcceso ? <Text style={styles.error}>{errorAcceso}</Text> : null}
+        <Pressable
+          style={[styles.avatarButton, verificando && styles.buttonDisabled]}
+          onPress={unirseASala}
+          disabled={verificando}
+        >
+          {verificando ? (
+            <ActivityIndicator color={colors.surface} />
+          ) : (
+            <Text style={styles.avatarButtonText}>Unirme</Text>
+          )}
         </Pressable>
       </View>
 
@@ -103,6 +161,11 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: colors.textMuted,
   },
+  limiteTexto: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginTop: 8,
+  },
   input: {
     backgroundColor: colors.background,
     borderWidth: 1,
@@ -121,6 +184,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: "center",
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   avatarButtonText: {
     color: colors.surface,
@@ -147,5 +213,10 @@ const styles = StyleSheet.create({
     color: colors.danger,
     fontSize: 15,
     fontWeight: "600",
+  },
+  error: {
+    color: colors.danger,
+    fontSize: 13,
+    marginTop: 8,
   },
 });
