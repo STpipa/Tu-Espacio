@@ -1,0 +1,117 @@
+# CLAUDE.md — Tu Espacio 🌿⚡
+
+## Identidad y contexto
+Este repo es la app **Tu Espacio**: una plataforma inmersiva de constelaciones familiares en un entorno 3D multiusuario en tiempo real (estilo Roblox), combinando la calidez de un centro de sanación con tecnología interactiva moderna.
+
+Origen del proyecto: documento de arquitectura `Tu_Espacio_Documento_Completo_v3.pdf` (subido por el usuario el 2026-07-27), que define stack, esquema de datos, monetización y una guía de 5 prompts secuenciales para construir la app paso a paso con Claude Code. Este CLAUDE.md es la versión "viva" de ese documento: se actualiza a medida que el proyecto avanza (el PDF original queda como referencia histórica, no se vuelve a editar).
+
+**Estado al 2026-07-27:** carpeta recién creada, sin código todavía. Punto de partida: correr el Paso A de la guía (ver más abajo).
+
+## Identificador técnico
+- Nombre de la app: **Tu Espacio**
+- Package/bundle id: `com.tuespacio.app` (temporal — confirmar antes de compilar con EAS, puede requerir un dominio real invertido si se registra en las tiendas)
+
+## Stack tecnológico
+
+| Capa | Función | Tecnologías clave |
+|---|---|---|
+| Plataforma móvil | Navegación, UI, perfiles y gestión | Expo (React Native) |
+| Backend / BD | Auth, base de datos, storage de assets | Supabase (Auth, Postgres, Storage) |
+| Entorno 3D | Renderizado de mundo inmersivo y avatares | React Three Fiber / Three.js |
+| Tiempo real | Sincronización de posiciones 3D y chat | WebSockets (Socket.io o Colyseus) |
+| Comunicación de voz | Audio espacial de baja latencia en sala | WebRTC (LiveKit o Agora) |
+| Pagos / compras | Suscripciones y monetización | RevenueCat |
+
+## Características del entorno 3D y avatares
+- **Cámara orbitable 360°**: libertad total para observar ángulos y dirección de mirada de los representantes.
+- **Controles de Super Admin / Curador**: congelar movimiento de avatares, teletransportar/forzar posición (X, Y, Z), silenciar audio/micrófono y chat de texto, expulsar (kick) y bloquear (ban) de la sesión.
+- **Avatares modulares personalizables**: capas (ej. Superman), accesorios (ej. Martillo de Thor), disfraces (Monje, Rana), botón "Al azar" para combinaciones aleatorias. La configuración se guarda como JSON en Supabase (`avatar_config`).
+
+## Esquema de base de datos (Supabase / PostgreSQL)
+
+**`profiles`**
+- `id` (UUID, referencia a `auth.users`)
+- `email`
+- `role` (`super_admin` | `curador` | `cliente`)
+- `exento_pago` (boolean, default `false`)
+- `avatar_config` (JSONB)
+
+**`salas_3d`**
+- `id` (UUID)
+- `curador_id`
+- `codigo_acceso`
+- `estado`
+- `created_at`
+
+**`catalogo_avatares`**
+- `id`
+- `nombre`
+- `categoria`
+- `model_url` (modelos GLB en Supabase Storage)
+- `es_premium`
+
+**`sesiones_uso`**
+- `id`
+- `cliente_id`
+- `fecha_asistencia` (control del límite mensual de clientes gratuitos)
+
+## Modelo de monetización y permisos
+- **Modelo híbrido**: suscripción para curadores + límite de 2 asistencias gratis/mes para clientes + tienda de accesorios de avatares.
+- **Bypass para curadores elegidos**: antes de pedir pago por RevenueCat, verificar `exento_pago == true` o `role == 'super_admin'`.
+- **Permisos del sistema**: micrófono (audio WebRTC), notificaciones push (avisos de citas), cámara/galería (foto de perfil) — todos con mensajes explicativos claros al usuario.
+
+## Onboarding y publicación
+- Onboarding de 3 pantallas, solo la primera vez: (1) Sanación y Conexión, (2) Espacios 3D e Innovación, (3) Sesiones Guiadas en Vivo.
+- `app.json` con `name: "Tu Espacio"`, `package: "com.tuespacio.app"`, listo para build con EAS (iOS/Android).
+
+## Roadmap de implementación — 5 pasos secuenciales
+Seguir este orden. Marcar cada paso como hecho en "✅ Próximos pasos" (abajo) y dejar un registro en "📌 Decisiones clave" al completarlo.
+
+**Paso A — Autenticación y roles**
+Añadir auth con Supabase a la app de Expo. Crear tabla `profiles` vinculada a `auth.users` con `role` (`super_admin`/`curador`/`cliente`) y `exento_pago` (boolean, default false). Sin sesión → pantalla de login. Cliente → vista principal. Curador → panel de creación de salas.
+
+**Paso B — Entorno virtual 3D y avatares modulares**
+Integrar React Three Fiber: sala 3D interactiva con cámara orbitable 360°. Cargar avatares leyendo `avatar_config` (JSONB) desde Supabase. Controles de movimiento en el plano 3D + botón "Al azar" que combina accesorios desde `catalogo_avatares`.
+
+**Paso C — Sincronización en tiempo real y moderación**
+Conectar la sala 3D con WebSockets para sincronizar posición/rotación en tiempo real. Panel de herramientas exclusivo para `role = 'curador'` o `'super_admin'`: mover cualquier avatar, congelar movimiento, silenciar audio/chat, expulsar usuario.
+
+**Paso D — Monetización y bypass de pagos**
+Límites de uso + pagos con RevenueCat. Clientes gratuitos: máximo 2 asistencias/mes (tabla `sesiones_uso`). Antes de dejar crear una sala a un curador, verificar en Supabase: `role == 'super_admin'` OR `exento_pago == true` OR suscripción activa en RevenueCat.
+
+**Paso E — Permisos, onboarding y preparación EAS**
+Configurar permisos (micrófono, notificaciones push, cámara/galería) con mensajes explicativos. Onboarding inicial de 3 pantallas, estética holística, solo la primera vez. `app.json` listo (`name`, `package`) para publicar con EAS Build.
+
+## Credenciales y entorno
+Todavía **no hay credenciales reales** (2026-07-27). Convenciones a seguir:
+- Variables de entorno en `.env` (nunca commitear), con prefijo `EXPO_PUBLIC_` para lo que necesite el cliente: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, `EXPO_PUBLIC_REVENUECAT_API_KEY`.
+- Preferir **tiers gratis/sandbox** mientras se prueba, antes de comprometerse a un plan pago:
+  - Supabase: tier gratis alcanza para desarrollo (Auth + Postgres + Storage).
+  - RevenueCat: gratis hasta cierto volumen de ingresos + modo sandbox para probar compras sin cobrar de verdad.
+  - Tiempo real: Colyseus/Socket.io son open source, sin costo de licencia (el costo es solo del hosting).
+  - Voz (WebRTC): LiveKit tiene tier gratis / self-hosted; Agora también tiene tier gratis con límite de minutos — evaluar cuál conviene cuando se llegue al Paso C.
+- Si algún servicio termina siendo de pago, avisar antes de asumir el costo y buscar la alternativa gratis equivalente para la fase de pruebas.
+
+## Convenciones de trabajo
+- Un repo para este proyecto (no mezclar con otras apps).
+- Al final de cada sesión (o tras un cambio completo), commitear y pushear a `origin/main` sin pedir confirmación cada vez, salvo que quede algo a medio terminar o `git status` muestre algo raro.
+- Actualizar este `CLAUDE.md` (sección "📌 Decisiones clave" y "✅ Próximos pasos") con cada avance importante.
+- **Reflejar cada avance importante en Obsidian**: hay una nota espejo de este proyecto en el "segundo cerebro" del usuario, en `C:\Obsidian Vault\proyectos\tu-espacio.md`. Si Claude Code tiene acceso a esa carpeta, actualizarla junto con este archivo (misma lógica que el resto de los proyectos del usuario: decisiones clave fechadas, próximos pasos con checkboxes). Si no tiene acceso, dejarlo anotado como pendiente de sincronizar manualmente.
+
+## 📌 Decisiones clave
+- **2026-07-27:** Proyecto iniciado a partir del documento de arquitectura subido (`Tu_Espacio_Documento_Completo_v3.pdf`). Se armó este `CLAUDE.md` con stack, esquema de Supabase, modelo de monetización/permisos y los 5 prompts secuenciales (Pasos A-E) como roadmap. Se creó la nota espejo en Obsidian (`proyectos/tu-espacio.md`). Sin credenciales reales todavía — se usarán tiers gratis/sandbox de Supabase y RevenueCat para las pruebas iniciales.
+- **2026-07-27:** Node.js no estaba instalado en el equipo y no había `winget`/`choco` disponibles para instalarlo, y el instalador MSI oficial falló por falta de permisos de administrador (Error 1925). Se instaló la versión **portable** de Node.js v24.18.0 LTS en `%LOCALAPPDATA%\Programs\nodejs-portable\` (sin necesitar admin) y se agregó al PATH de usuario. Si en una terminal nueva `node`/`npm` no se reconocen, puede requerir cerrar sesión de Windows una vez para que el PATH nuevo se propague, o agregar esa carpeta al PATH manualmente.
+- **2026-07-27:** Se inicializó el repo git local (rama `main`). Todavía no tiene remoto configurado en GitHub — falta correr `git remote add origin <url>` con el repo que se cree para este proyecto antes de poder pushear.
+- **2026-07-27:** **Paso A completado** (auth + roles). Se scaffoldeó la app con `create-expo-app` (blank-typescript, SDK 57). Se agregó `@supabase/supabase-js` + AsyncStorage para persistencia de sesión, y `@react-navigation` (native-stack) para el ruteo. `src/contexts/AuthContext.tsx` maneja sesión y perfil; `src/navigation/RootNavigator.tsx` decide la pantalla según estado: sin sesión → `LoginScreen`, `role === 'cliente'` → `ClienteScreen`, `role === 'curador'` o `'super_admin'` → `CuradorScreen` (con panel básico de creación de salas, ya conectado a una tabla `salas_3d`). La migración SQL vive en `supabase/schema.sql` (tabla `profiles` con enum de rol + trigger que crea el perfil automáticamente al registrarse, tabla `salas_3d` con RLS). Validado con `tsc --noEmit` (sin errores) y `expo export --platform web` (bundle de 524 módulos sin errores). **Pendiente para que funcione de verdad:** crear un proyecto en Supabase (tier free), correr `supabase/schema.sql` en el SQL Editor, y completar `.env` con la URL y anon key reales (hoy tiene placeholders). Sin eso, la app compila y navega pero el login no puede autenticar contra nada real.
+
+## ✅ Próximos pasos
+- [x] Paso A — Autenticación y roles (Supabase) — código listo, falta que el usuario cree el proyecto Supabase real y cargue credenciales en `.env`
+- [ ] Paso B — Entorno 3D y avatares modulares
+- [ ] Paso C — Sincronización en tiempo real y moderación
+- [ ] Paso D — Monetización y bypass de pagos
+- [ ] Paso E — Permisos, onboarding y preparación EAS
+- [ ] Configurar remoto de GitHub (`git remote add origin`) para poder pushear
+
+## 🔗 Relacionado
+- Nota espejo en Obsidian: `C:\Obsidian Vault\proyectos\tu-espacio.md`
+- Documento original: `Tu_Espacio_Documento_Completo_v3.pdf` (en esta misma carpeta)
