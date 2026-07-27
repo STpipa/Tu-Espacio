@@ -9,6 +9,7 @@
     "@react-three/fiber": "^9.6.1",
     "@supabase/supabase-js": "^2.110.9",
     "@types/three": "^0.185.1",
+    "colyseus.js": "0.16.22",
     "expo": "~57.0.8",
     "expo-gl": "~57.0.2",
     "expo-status-bar": "~57.0.1",

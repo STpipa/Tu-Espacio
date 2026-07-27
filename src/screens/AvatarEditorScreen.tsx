@@ -174,10 +174,12 @@ export default function AvatarEditorScreen() {
 
   return (
     <View style={styles.container}>
-      <Sala3D avatarConfig={avatarConfigActual} avatarPosition={posicion} />
+      <View style={styles.escena3d}>
+        <Sala3D avatarConfig={avatarConfigActual} avatarPosition={posicion} />
 
-      <View style={styles.movementOverlay}>
-        <MovementPad onMove={mover} />
+        <View style={styles.movementOverlay}>
+          <MovementPad onMove={mover} />
+        </View>
       </View>
 
       <View style={styles.panel}>
@@ -235,6 +237,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  escena3d: {
+    flex: 1,
   },
   center: {
     flex: 1,

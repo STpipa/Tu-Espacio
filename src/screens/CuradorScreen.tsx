@@ -129,8 +129,18 @@ export default function CuradorScreen() {
           }
           renderItem={({ item }) => (
             <View style={styles.salaCard}>
-              <Text style={styles.salaCodigo}>{item.codigo_acceso}</Text>
-              <Text style={styles.salaEstado}>{item.estado}</Text>
+              <View>
+                <Text style={styles.salaCodigo}>{item.codigo_acceso}</Text>
+                <Text style={styles.salaEstado}>{item.estado}</Text>
+              </View>
+              <Pressable
+                style={styles.entrarButton}
+                onPress={() =>
+                  navigation.navigate("SalaEnVivo", { codigo: item.codigo_acceso })
+                }
+              >
+                <Text style={styles.entrarButtonText}>Entrar</Text>
+              </Pressable>
             </View>
           )}
         />
@@ -227,6 +237,17 @@ const styles = StyleSheet.create({
   avatarButtonText: {
     color: colors.primaryDark,
     fontWeight: "600",
+  },
+  entrarButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  entrarButtonText: {
+    color: colors.surface,
+    fontWeight: "600",
+    fontSize: 13,
   },
   emptyText: {
     color: colors.textMuted,

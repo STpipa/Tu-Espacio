@@ -7,6 +7,7 @@ import ClienteScreen from "../screens/ClienteScreen";
 import CuradorScreen from "../screens/CuradorScreen";
 import LoadingScreen from "../screens/LoadingScreen";
 import AvatarEditorScreen from "../screens/AvatarEditorScreen";
+import SalaEnVivoScreen from "../screens/SalaEnVivoScreen";
 import { colors } from "../lib/theme";
 
 export type RootStackParamList = {
@@ -15,9 +16,37 @@ export type RootStackParamList = {
   Cliente: undefined;
   Curador: undefined;
   AvatarEditor: undefined;
+  SalaEnVivo: { codigo: string };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+const headerOptions = {
+  headerShown: true,
+  headerStyle: { backgroundColor: colors.background },
+  headerTintColor: colors.primaryDark,
+};
+
+// Ojo: React Navigation resuelve las rutas inspeccionando los hijos de
+// <Stack.Group>/<Stack.Navigator> de forma estática, así que las pantallas
+// compartidas van como un array de <Stack.Screen> directo (no un componente
+// envoltorio, que no funciona con este mecanismo).
+function pantallasComunes() {
+  return [
+    <Stack.Screen
+      key="AvatarEditor"
+      name="AvatarEditor"
+      component={AvatarEditorScreen}
+      options={{ ...headerOptions, title: "Tu avatar" }}
+    />,
+    <Stack.Screen
+      key="SalaEnVivo"
+      name="SalaEnVivo"
+      component={SalaEnVivoScreen}
+      options={{ ...headerOptions, title: "Sala en vivo" }}
+    />,
+  ];
+}
 
 export default function RootNavigator() {
   const { session, profile, loading } = useAuth();
@@ -36,30 +65,12 @@ export default function RootNavigator() {
         ) : profile.role === "cliente" ? (
           <Stack.Group>
             <Stack.Screen name="Cliente" component={ClienteScreen} />
-            <Stack.Screen
-              name="AvatarEditor"
-              component={AvatarEditorScreen}
-              options={{
-                headerShown: true,
-                title: "Tu avatar",
-                headerStyle: { backgroundColor: colors.background },
-                headerTintColor: colors.primaryDark,
-              }}
-            />
+            {pantallasComunes()}
           </Stack.Group>
         ) : (
           <Stack.Group>
             <Stack.Screen name="Curador" component={CuradorScreen} />
-            <Stack.Screen
-              name="AvatarEditor"
-              component={AvatarEditorScreen}
-              options={{
-                headerShown: true,
-                title: "Tu avatar",
-                headerStyle: { backgroundColor: colors.background },
-                headerTintColor: colors.primaryDark,
-              }}
-            />
+            {pantallasComunes()}
           </Stack.Group>
         )}
       </Stack.Navigator>

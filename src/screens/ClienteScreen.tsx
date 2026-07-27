@@ -1,5 +1,5 @@
-import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useState } from "react";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuth } from "../contexts/AuthContext";
@@ -10,6 +10,13 @@ export default function ClienteScreen() {
   const { profile, signOut } = useAuth();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [codigo, setCodigo] = useState("");
+
+  function unirseASala() {
+    const limpio = codigo.trim().toUpperCase();
+    if (!limpio) return;
+    navigation.navigate("SalaEnVivo", { codigo: limpio });
+  }
 
   return (
     <View style={styles.container}>
@@ -19,17 +26,36 @@ export default function ClienteScreen() {
       </View>
 
       <View style={styles.card}>
+        <Text style={styles.cardTitle}>Unite a una sala</Text>
+        <Text style={styles.cardBody}>
+          Pedile el código de acceso a tu curador y entrá a la sesión en
+          vivo.
+        </Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Código de sala"
+          placeholderTextColor={colors.textMuted}
+          autoCapitalize="characters"
+          value={codigo}
+          onChangeText={setCodigo}
+        />
+        <Pressable style={styles.avatarButton} onPress={unirseASala}>
+          <Text style={styles.avatarButtonText}>Unirme</Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.card}>
         <Text style={styles.cardTitle}>Tu espacio te espera</Text>
         <Text style={styles.cardBody}>
-          Acá vas a poder unirte a las salas 3D de constelaciones familiares y
-          ver tus próximas sesiones guiadas en vivo. Esta vista se completa en
-          los próximos pasos del proyecto.
+          Personalizá tu avatar antes de entrar a una sala.
         </Text>
         <Pressable
-          style={styles.avatarButton}
+          style={styles.avatarButtonSecundario}
           onPress={() => navigation.navigate("AvatarEditor")}
         >
-          <Text style={styles.avatarButtonText}>🧑‍🎤 Personalizar mi avatar</Text>
+          <Text style={styles.avatarButtonSecundarioText}>
+            🧑‍🎤 Personalizar mi avatar
+          </Text>
         </Pressable>
       </View>
 
@@ -46,6 +72,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     padding: 24,
     justifyContent: "space-between",
+    gap: 16,
   },
   greeting: {
     fontSize: 26,
@@ -76,8 +103,20 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: colors.textMuted,
   },
+  input: {
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: colors.text,
+    marginTop: 12,
+    letterSpacing: 2,
+  },
   avatarButton: {
-    marginTop: 16,
+    marginTop: 12,
     backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 12,
@@ -85,6 +124,18 @@ const styles = StyleSheet.create({
   },
   avatarButtonText: {
     color: colors.surface,
+    fontWeight: "600",
+  },
+  avatarButtonSecundario: {
+    marginTop: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  avatarButtonSecundarioText: {
+    color: colors.primaryDark,
     fontWeight: "600",
   },
   signOutButton: {
