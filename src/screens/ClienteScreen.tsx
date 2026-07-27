@@ -1,10 +1,15 @@
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuth } from "../contexts/AuthContext";
 import { colors } from "../lib/theme";
+import type { RootStackParamList } from "../navigation/RootNavigator";
 
 export default function ClienteScreen() {
   const { profile, signOut } = useAuth();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   return (
     <View style={styles.container}>
@@ -20,6 +25,12 @@ export default function ClienteScreen() {
           ver tus próximas sesiones guiadas en vivo. Esta vista se completa en
           los próximos pasos del proyecto.
         </Text>
+        <Pressable
+          style={styles.avatarButton}
+          onPress={() => navigation.navigate("AvatarEditor")}
+        >
+          <Text style={styles.avatarButtonText}>🧑‍🎤 Personalizar mi avatar</Text>
+        </Pressable>
       </View>
 
       <Pressable style={styles.signOutButton} onPress={signOut}>
@@ -64,6 +75,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: colors.textMuted,
+  },
+  avatarButton: {
+    marginTop: 16,
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  avatarButtonText: {
+    color: colors.surface,
+    fontWeight: "600",
   },
   signOutButton: {
     alignSelf: "center",

@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
-import type { Profile } from "../lib/types";
+import { normalizarAvatarConfig, type Profile } from "../lib/types";
 
 interface AuthContextValue {
   session: Session | null;
@@ -16,6 +16,7 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -37,7 +38,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(null);
       return;
     }
-    setProfile(data as Profile);
+    setProfile({
+      ...(data as Profile),
+      avatar_config: normalizarAvatarConfig(data.avatar_config),
+    });
   }
 
   useEffect(() => {
@@ -87,6 +91,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
       async signOut() {
         await supabase.auth.signOut();
+      },
+      async refreshProfile() {
+        if (session) {
+          await fetchProfile(session.user.id);
+        }
       },
     }),
     [session, profile, loading]

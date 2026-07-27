@@ -7,9 +7,12 @@ import {
   Text,
   View,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 import { colors } from "../lib/theme";
+import type { RootStackParamList } from "../navigation/RootNavigator";
 
 interface Sala {
   id: string;
@@ -29,6 +32,8 @@ function generarCodigoAcceso() {
 
 export default function CuradorScreen() {
   const { profile, signOut } = useAuth();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [salas, setSalas] = useState<Sala[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -99,6 +104,13 @@ export default function CuradorScreen() {
         ) : (
           <Text style={styles.createButtonText}>+ Crear nueva sala</Text>
         )}
+      </Pressable>
+
+      <Pressable
+        style={styles.avatarButton}
+        onPress={() => navigation.navigate("AvatarEditor")}
+      >
+        <Text style={styles.avatarButtonText}>🧑‍🎤 Personalizar mi avatar</Text>
       </Pressable>
 
       {errorMsg ? <Text style={styles.error}>{errorMsg}</Text> : null}
@@ -203,6 +215,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textMuted,
     textTransform: "capitalize",
+  },
+  avatarButton: {
+    marginTop: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  avatarButtonText: {
+    color: colors.primaryDark,
+    fontWeight: "600",
   },
   emptyText: {
     color: colors.textMuted,
