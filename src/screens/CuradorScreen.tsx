@@ -14,6 +14,8 @@ import { supabase } from "../lib/supabase";
 import { colors } from "../lib/theme";
 import { puedeCrearSala } from "../lib/monetizacion";
 import { verificarSuscripcionActiva } from "../lib/revenuecat";
+import FotoPerfil from "../components/FotoPerfil";
+import PermisosCard from "../components/PermisosCard";
 import type { RootStackParamList } from "../navigation/RootNavigator";
 
 interface Sala {
@@ -92,75 +94,84 @@ export default function CuradorScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Panel del curador</Text>
-          <Text style={styles.email}>{profile?.email}</Text>
-        </View>
-        {profile?.role === "super_admin" ? (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>Super Admin</Text>
-          </View>
-        ) : null}
-      </View>
-
-      <Pressable
-        style={[styles.createButton, creating && styles.buttonDisabled]}
-        onPress={crearSala}
-        disabled={creating}
-      >
-        {creating ? (
-          <ActivityIndicator color={colors.surface} />
-        ) : (
-          <Text style={styles.createButtonText}>+ Crear nueva sala</Text>
-        )}
-      </Pressable>
-
-      <Pressable
-        style={styles.avatarButton}
-        onPress={() => navigation.navigate("AvatarEditor")}
-      >
-        <Text style={styles.avatarButtonText}>🧑‍🎤 Personalizar mi avatar</Text>
-      </Pressable>
-
-      {errorMsg ? <Text style={styles.error}>{errorMsg}</Text> : null}
-
-      {loading ? (
-        <ActivityIndicator style={{ marginTop: 24 }} color={colors.primary} />
-      ) : (
-        <FlatList
-          style={styles.list}
-          data={salas}
-          keyExtractor={(item) => item.id}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>
-              Todavía no creaste ninguna sala.
-            </Text>
-          }
-          renderItem={({ item }) => (
-            <View style={styles.salaCard}>
-              <View>
-                <Text style={styles.salaCodigo}>{item.codigo_acceso}</Text>
-                <Text style={styles.salaEstado}>{item.estado}</Text>
-              </View>
-              <Pressable
-                style={styles.entrarButton}
-                onPress={() =>
-                  navigation.navigate("SalaEnVivo", { codigo: item.codigo_acceso })
-                }
-              >
-                <Text style={styles.entrarButtonText}>Entrar</Text>
-              </Pressable>
+    <FlatList
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      data={salas}
+      keyExtractor={(item) => item.id}
+      ListHeaderComponent={
+        <>
+          <View style={styles.header}>
+            <FotoPerfil />
+            <View style={styles.headerTexto}>
+              <Text style={styles.greeting}>Panel del curador</Text>
+              <Text style={styles.email}>{profile?.email}</Text>
             </View>
-          )}
-        />
-      )}
+            {profile?.role === "super_admin" ? (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>Super Admin</Text>
+              </View>
+            ) : null}
+          </View>
 
-      <Pressable style={styles.signOutButton} onPress={signOut}>
-        <Text style={styles.signOutText}>Cerrar sesión</Text>
-      </Pressable>
-    </View>
+          <Pressable
+            style={[styles.createButton, creating && styles.buttonDisabled]}
+            onPress={crearSala}
+            disabled={creating}
+          >
+            {creating ? (
+              <ActivityIndicator color={colors.surface} />
+            ) : (
+              <Text style={styles.createButtonText}>+ Crear nueva sala</Text>
+            )}
+          </Pressable>
+
+          <Pressable
+            style={styles.avatarButton}
+            onPress={() => navigation.navigate("AvatarEditor")}
+          >
+            <Text style={styles.avatarButtonText}>
+              🧑‍🎤 Personalizar mi avatar
+            </Text>
+          </Pressable>
+
+          {errorMsg ? <Text style={styles.error}>{errorMsg}</Text> : null}
+
+          {loading ? (
+            <ActivityIndicator style={{ marginTop: 24 }} color={colors.primary} />
+          ) : null}
+        </>
+      }
+      ListEmptyComponent={
+        !loading ? (
+          <Text style={styles.emptyText}>Todavía no creaste ninguna sala.</Text>
+        ) : null
+      }
+      renderItem={({ item }) => (
+        <View style={styles.salaCard}>
+          <View>
+            <Text style={styles.salaCodigo}>{item.codigo_acceso}</Text>
+            <Text style={styles.salaEstado}>{item.estado}</Text>
+          </View>
+          <Pressable
+            style={styles.entrarButton}
+            onPress={() =>
+              navigation.navigate("SalaEnVivo", { codigo: item.codigo_acceso })
+            }
+          >
+            <Text style={styles.entrarButtonText}>Entrar</Text>
+          </Pressable>
+        </View>
+      )}
+      ListFooterComponent={
+        <View style={styles.footer}>
+          <PermisosCard />
+          <Pressable style={styles.signOutButton} onPress={signOut}>
+            <Text style={styles.signOutText}>Cerrar sesión</Text>
+          </Pressable>
+        </View>
+      }
+    />
   );
 }
 
@@ -168,13 +179,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  contentContainer: {
     padding: 24,
   },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
+    gap: 16,
     marginTop: 12,
+  },
+  headerTexto: {
+    flex: 1,
   },
   greeting: {
     fontSize: 22,
@@ -191,6 +207,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
+    alignSelf: "flex-start",
   },
   badgeText: {
     color: colors.surface,
@@ -212,16 +229,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  list: {
-    marginTop: 16,
-  },
   salaCard: {
     backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.border,
     padding: 16,
-    marginBottom: 10,
+    marginTop: 16,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -264,6 +278,10 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     textAlign: "center",
     marginTop: 24,
+  },
+  footer: {
+    marginTop: 24,
+    gap: 16,
   },
   signOutButton: {
     alignSelf: "center",

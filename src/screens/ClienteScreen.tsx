@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -16,6 +17,8 @@ import {
   contarSesionesEsteMes,
   puedeUnirseComoCliente,
 } from "../lib/monetizacion";
+import FotoPerfil from "../components/FotoPerfil";
+import PermisosCard from "../components/PermisosCard";
 import type { RootStackParamList } from "../navigation/RootNavigator";
 
 export default function ClienteScreen() {
@@ -62,10 +65,16 @@ export default function ClienteScreen() {
   const sinLimite = profile?.role === "super_admin" || profile?.exento_pago;
 
   return (
-    <View style={styles.container}>
-      <View>
-        <Text style={styles.greeting}>Hola 🌿</Text>
-        <Text style={styles.email}>{profile?.email}</Text>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+    >
+      <View style={styles.header}>
+        <FotoPerfil />
+        <View style={styles.headerTexto}>
+          <Text style={styles.greeting}>Hola 🌿</Text>
+          <Text style={styles.email}>{profile?.email}</Text>
+        </View>
       </View>
 
       <View style={styles.card}>
@@ -117,10 +126,12 @@ export default function ClienteScreen() {
         </Pressable>
       </View>
 
+      <PermisosCard />
+
       <Pressable style={styles.signOutButton} onPress={signOut}>
         <Text style={styles.signOutText}>Cerrar sesión</Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -128,15 +139,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  contentContainer: {
     padding: 24,
-    justifyContent: "space-between",
     gap: 16,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    marginTop: 12,
+  },
+  headerTexto: {
+    flex: 1,
   },
   greeting: {
     fontSize: 26,
     fontWeight: "700",
     color: colors.primaryDark,
-    marginTop: 12,
   },
   email: {
     fontSize: 14,

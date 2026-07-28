@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -38,6 +39,15 @@ export default function SalaEnVivoScreen() {
   }
 
   function confirmarExpulsar(sessionId: string, email: string) {
+    // Alert.alert es un no-op en react-native-web (no dispara ningún
+    // botón), así que ahí usamos window.confirm en su lugar.
+    if (Platform.OS === "web") {
+      if (window.confirm(`¿Expulsar a ${email} de la sala?`)) {
+        moderar("expulsar", sessionId);
+      }
+      return;
+    }
+
     Alert.alert("Expulsar", `¿Expulsar a ${email} de la sala?`, [
       { text: "Cancelar", style: "cancel" },
       {

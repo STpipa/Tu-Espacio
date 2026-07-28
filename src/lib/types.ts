@@ -24,6 +24,7 @@ export interface Profile {
   role: UserRole;
   exento_pago: boolean;
   avatar_config: AvatarConfig;
+  foto_url: string | null;
 }
 
 const AVATAR_CONFIG_VACIO: AvatarConfig = {

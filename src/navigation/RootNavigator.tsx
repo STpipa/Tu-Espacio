@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useAuth } from "../contexts/AuthContext";
@@ -6,9 +6,11 @@ import LoginScreen from "../screens/LoginScreen";
 import ClienteScreen from "../screens/ClienteScreen";
 import CuradorScreen from "../screens/CuradorScreen";
 import LoadingScreen from "../screens/LoadingScreen";
+import OnboardingScreen from "../screens/OnboardingScreen";
 import AvatarEditorScreen from "../screens/AvatarEditorScreen";
 import SalaEnVivoScreen from "../screens/SalaEnVivoScreen";
 import { colors } from "../lib/theme";
+import { getOnboardingCompletado } from "../lib/onboarding";
 
 export type RootStackParamList = {
   Login: undefined;
@@ -50,6 +52,21 @@ function pantallasComunes() {
 
 export default function RootNavigator() {
   const { session, profile, loading } = useAuth();
+  const [onboardingCompletado, setOnboardingCompletado] = useState<boolean | null>(
+    null
+  );
+
+  useEffect(() => {
+    getOnboardingCompletado().then(setOnboardingCompletado);
+  }, []);
+
+  if (onboardingCompletado === null) {
+    return <LoadingScreen />;
+  }
+
+  if (!onboardingCompletado) {
+    return <OnboardingScreen onFinish={() => setOnboardingCompletado(true)} />;
+  }
 
   if (loading) {
     return <LoadingScreen />;

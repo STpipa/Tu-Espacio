@@ -22,6 +22,22 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Tu Espacio usa el micrófono para el audio de las salas en vivo."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Tu Espacio usa tu galería para que elijas una foto de perfil.",
+          "cameraPermission": "Tu Espacio usa la cámara para que te saques una foto de perfil."
+        }
+      ],
+      "expo-notifications"
+    ]
   }
 }
