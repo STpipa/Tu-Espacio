@@ -1,14 +1,14 @@
 // Paleta de relleno: hasta que haya modelos .glb reales en Supabase Storage,
 // cada nombre de avatar/accesorio se pinta con un color determinístico.
 const PALETTE = [
-  "#4F7A5C",
-  "#B3543E",
-  "#C9A25E",
-  "#3C6E91",
-  "#7A4E9E",
-  "#5C8AA6",
-  "#8C5A3C",
-  "#6E8C3C",
+  "#9D5CFF",
+  "#4FD1C5",
+  "#E4B764",
+  "#FF6F91",
+  "#7C83FD",
+  "#6FE7C8",
+  "#F2A65A",
+  "#C77DFF",
 ];
 
 export function colorParaNombre(nombre: string): string {

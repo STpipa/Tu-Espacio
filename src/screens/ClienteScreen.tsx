@@ -10,8 +10,9 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../contexts/AuthContext";
-import { colors } from "../lib/theme";
+import { colors, fonts, gradients } from "../lib/theme";
 import {
   LIMITE_SESIONES_GRATIS_POR_MES,
   contarSesionesEsteMes,
@@ -99,15 +100,22 @@ export default function ClienteScreen() {
         />
         {errorAcceso ? <Text style={styles.error}>{errorAcceso}</Text> : null}
         <Pressable
-          style={[styles.avatarButton, verificando && styles.buttonDisabled]}
+          style={[styles.avatarButtonWrap, verificando && styles.buttonDisabled]}
           onPress={unirseASala}
           disabled={verificando}
         >
-          {verificando ? (
-            <ActivityIndicator color={colors.surface} />
-          ) : (
-            <Text style={styles.avatarButtonText}>Unirme</Text>
-          )}
+          <LinearGradient
+            colors={gradients.accent}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.avatarButton}
+          >
+            {verificando ? (
+              <ActivityIndicator color={colors.background} />
+            ) : (
+              <Text style={styles.avatarButtonText}>Unirme</Text>
+            )}
+          </LinearGradient>
         </Pressable>
       </View>
 
@@ -154,9 +162,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   greeting: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: colors.primaryDark,
+    fontFamily: fonts.display,
+    fontSize: 24,
+    color: colors.text,
   },
   email: {
     fontSize: 14,
@@ -169,6 +177,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: 20,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    elevation: 3,
   },
   cardTitle: {
     fontSize: 18,
@@ -183,7 +196,8 @@ const styles = StyleSheet.create({
   },
   limiteTexto: {
     fontSize: 12,
-    color: colors.textMuted,
+    fontWeight: "700",
+    color: colors.primarySoft,
     marginTop: 8,
   },
   input: {
@@ -198,9 +212,11 @@ const styles = StyleSheet.create({
     marginTop: 12,
     letterSpacing: 2,
   },
-  avatarButton: {
+  avatarButtonWrap: {
     marginTop: 12,
-    backgroundColor: colors.primary,
+    borderRadius: 12,
+  },
+  avatarButton: {
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: "center",
@@ -209,8 +225,8 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   avatarButtonText: {
-    color: colors.surface,
-    fontWeight: "600",
+    color: colors.background,
+    fontWeight: "700",
   },
   avatarButtonSecundario: {
     marginTop: 4,
@@ -221,7 +237,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   avatarButtonSecundarioText: {
-    color: colors.primaryDark,
+    color: colors.primarySoft,
     fontWeight: "600",
   },
   signOutButton: {

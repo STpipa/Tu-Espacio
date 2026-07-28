@@ -9,9 +9,10 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
-import { colors } from "../lib/theme";
+import { colors, fonts, gradients } from "../lib/theme";
 import { puedeCrearSala } from "../lib/monetizacion";
 import { verificarSuscripcionActiva } from "../lib/revenuecat";
 import FotoPerfil from "../components/FotoPerfil";
@@ -108,22 +109,30 @@ export default function CuradorScreen() {
               <Text style={styles.email}>{profile?.email}</Text>
             </View>
             {profile?.role === "super_admin" ? (
-              <View style={styles.badge}>
+              <LinearGradient
+                colors={[colors.warm, "#F3D698"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.badge}
+              >
                 <Text style={styles.badgeText}>Super Admin</Text>
-              </View>
+              </LinearGradient>
             ) : null}
           </View>
 
-          <Pressable
-            style={[styles.createButton, creating && styles.buttonDisabled]}
-            onPress={crearSala}
-            disabled={creating}
-          >
-            {creating ? (
-              <ActivityIndicator color={colors.surface} />
-            ) : (
-              <Text style={styles.createButtonText}>+ Crear nueva sala</Text>
-            )}
+          <Pressable onPress={crearSala} disabled={creating}>
+            <LinearGradient
+              colors={gradients.accent}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.createButton, creating && styles.buttonDisabled]}
+            >
+              {creating ? (
+                <ActivityIndicator color={colors.background} />
+              ) : (
+                <Text style={styles.createButtonText}>+ Crear nueva sala</Text>
+              )}
+            </LinearGradient>
           </Pressable>
 
           <Pressable
@@ -149,9 +158,12 @@ export default function CuradorScreen() {
       }
       renderItem={({ item }) => (
         <View style={styles.salaCard}>
-          <View>
+          <View style={styles.salaInfo}>
             <Text style={styles.salaCodigo}>{item.codigo_acceso}</Text>
-            <Text style={styles.salaEstado}>{item.estado}</Text>
+            <View style={styles.salaEstadoPill}>
+              <View style={styles.salaEstadoDot} />
+              <Text style={styles.salaEstado}>{item.estado}</Text>
+            </View>
           </View>
           <Pressable
             style={styles.entrarButton}
@@ -193,9 +205,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   greeting: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: colors.primaryDark,
+    fontFamily: fonts.display,
+    fontSize: 21,
+    color: colors.text,
   },
   email: {
     fontSize: 14,
@@ -203,20 +215,19 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   badge: {
-    backgroundColor: colors.badge,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
     alignSelf: "flex-start",
   },
   badgeText: {
-    color: colors.surface,
-    fontSize: 12,
+    color: "#2A1C07",
+    fontSize: 11,
     fontWeight: "700",
+    letterSpacing: 0.4,
   },
   createButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
+    borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
     marginTop: 20,
@@ -225,13 +236,13 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   createButtonText: {
-    color: colors.surface,
+    color: colors.background,
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   salaCard: {
     backgroundColor: colors.surface,
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.border,
     padding: 16,
@@ -240,14 +251,30 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
+  salaInfo: {
+    gap: 6,
+  },
   salaCodigo: {
     fontSize: 18,
     fontWeight: "700",
     letterSpacing: 2,
     color: colors.text,
   },
+  salaEstadoPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    alignSelf: "flex-start",
+  },
+  salaEstadoDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.textFaint,
+  },
   salaEstado: {
-    fontSize: 13,
+    fontSize: 12,
+    fontWeight: "600",
     color: colors.textMuted,
     textTransform: "capitalize",
   },
@@ -260,7 +287,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   avatarButtonText: {
-    color: colors.primaryDark,
+    color: colors.primarySoft,
     fontWeight: "600",
   },
   entrarButton: {
@@ -270,8 +297,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   entrarButtonText: {
-    color: colors.surface,
-    fontWeight: "600",
+    color: colors.background,
+    fontWeight: "700",
     fontSize: 13,
   },
   emptyText: {

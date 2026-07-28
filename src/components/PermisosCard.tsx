@@ -75,6 +75,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: 20,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    elevation: 3,
   },
   cardTitle: {
     fontSize: 18,
@@ -110,12 +115,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   botonTexto: {
-    color: colors.primaryDark,
+    color: colors.primarySoft,
     fontWeight: "600",
     fontSize: 12,
   },
   estadoOk: {
-    color: colors.primaryDark,
+    color: colors.success,
     fontWeight: "600",
     fontSize: 12,
   },

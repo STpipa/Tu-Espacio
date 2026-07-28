@@ -214,10 +214,12 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   panelTitulo: {
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: "700",
-    color: colors.primaryDark,
-    marginBottom: 8,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    color: colors.textFaint,
+    marginBottom: 10,
   },
   lista: {
     maxHeight: 140,
@@ -251,7 +253,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 8,
-    backgroundColor: colors.background,
+    backgroundColor: colors.surfaceElevated,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -270,8 +272,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   backButtonText: {
-    color: colors.surface,
-    fontWeight: "600",
+    color: colors.background,
+    fontWeight: "700",
   },
   mutedText: {
     color: colors.textMuted,

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { colors } from "../lib/theme";
+import { LinearGradient } from "expo-linear-gradient";
+import { colors, fonts, gradients } from "../lib/theme";
 import { marcarOnboardingCompletado } from "../lib/onboarding";
 
 interface Slide {
@@ -55,7 +56,9 @@ export default function OnboardingScreen({ onFinish }: { onFinish: () => void })
       </Pressable>
 
       <View style={styles.contenido}>
-        <Text style={styles.emoji}>{slide.emoji}</Text>
+        <View style={styles.emojiHalo}>
+          <Text style={styles.emoji}>{slide.emoji}</Text>
+        </View>
         <Text style={styles.titulo}>{slide.titulo}</Text>
         <Text style={styles.texto}>{slide.texto}</Text>
       </View>
@@ -69,10 +72,17 @@ export default function OnboardingScreen({ onFinish }: { onFinish: () => void })
         ))}
       </View>
 
-      <Pressable style={styles.boton} onPress={siguiente}>
-        <Text style={styles.botonTexto}>
-          {esUltima ? "Empezar" : "Siguiente"}
-        </Text>
+      <Pressable onPress={siguiente}>
+        <LinearGradient
+          colors={gradients.accent}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.boton}
+        >
+          <Text style={styles.botonTexto}>
+            {esUltima ? "Empezar" : "Siguiente"}
+          </Text>
+        </LinearGradient>
       </Pressable>
     </View>
   );
@@ -99,14 +109,29 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 16,
   },
+  emojiHalo: {
+    width: 132,
+    height: 132,
+    borderRadius: 66,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 28,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 24,
+    elevation: 8,
+  },
   emoji: {
-    fontSize: 64,
-    marginBottom: 24,
+    fontSize: 56,
   },
   titulo: {
+    fontFamily: fonts.display,
     fontSize: 24,
-    fontWeight: "700",
-    color: colors.primaryDark,
+    color: colors.text,
     textAlign: "center",
     marginBottom: 12,
   },
@@ -133,14 +158,13 @@ const styles = StyleSheet.create({
     width: 20,
   },
   boton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
+    borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
   },
   botonTexto: {
-    color: colors.surface,
+    color: colors.background,
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
   },
 });

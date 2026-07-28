@@ -4,13 +4,16 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../contexts/AuthContext";
-import { colors } from "../lib/theme";
+import { colors, fonts, gradients } from "../lib/theme";
+import ConstellationHero from "../three/ConstellationHero";
 
 export default function LoginScreen() {
   const { signIn, signUp } = useAuth();
@@ -53,61 +56,81 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Text style={styles.title}>Tu Espacio</Text>
-      <Text style={styles.subtitle}>
-        {mode === "signIn" ? "Iniciá sesión para continuar" : "Creá tu cuenta"}
-      </Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.heroStage}>
+          <ConstellationHero />
+        </View>
 
-      <View style={styles.form}>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor={colors.textMuted}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Contraseña"
-          placeholderTextColor={colors.textMuted}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-
-        {errorMsg ? <Text style={styles.error}>{errorMsg}</Text> : null}
-        {infoMsg ? <Text style={styles.info}>{infoMsg}</Text> : null}
-
-        <Pressable
-          style={[styles.button, submitting && styles.buttonDisabled]}
-          onPress={handleSubmit}
-          disabled={submitting}
-        >
-          {submitting ? (
-            <ActivityIndicator color={colors.surface} />
-          ) : (
-            <Text style={styles.buttonText}>
-              {mode === "signIn" ? "Entrar" : "Crear cuenta"}
-            </Text>
-          )}
-        </Pressable>
-
-        <Pressable
-          onPress={() => {
-            setErrorMsg(null);
-            setInfoMsg(null);
-            setMode(mode === "signIn" ? "signUp" : "signIn");
-          }}
-        >
-          <Text style={styles.switchModeText}>
-            {mode === "signIn"
-              ? "¿No tenés cuenta? Creá una"
-              : "¿Ya tenés cuenta? Iniciá sesión"}
+        <View style={styles.body}>
+          <Text style={styles.eyebrow}>Constelaciones familiares</Text>
+          <Text style={styles.title}>Tu Espacio</Text>
+          <Text style={styles.tagline}>Donde cada vínculo se vuelve visible.</Text>
+          <Text style={styles.subtitle}>
+            {mode === "signIn" ? "Iniciá sesión para continuar" : "Creá tu cuenta"}
           </Text>
-        </Pressable>
-      </View>
+
+          <View style={styles.form}>
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Contraseña"
+              placeholderTextColor={colors.textMuted}
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
+
+            {errorMsg ? <Text style={styles.error}>{errorMsg}</Text> : null}
+            {infoMsg ? <Text style={styles.info}>{infoMsg}</Text> : null}
+
+            <Pressable
+              style={[styles.buttonWrap, submitting && styles.buttonDisabled]}
+              onPress={handleSubmit}
+              disabled={submitting}
+            >
+              <LinearGradient
+                colors={gradients.accent}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.button}
+              >
+                {submitting ? (
+                  <ActivityIndicator color={colors.background} />
+                ) : (
+                  <Text style={styles.buttonText}>
+                    {mode === "signIn" ? "Entrar" : "Crear cuenta"}
+                  </Text>
+                )}
+              </LinearGradient>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                setErrorMsg(null);
+                setInfoMsg(null);
+                setMode(mode === "signIn" ? "signUp" : "signIn");
+              }}
+            >
+              <Text style={styles.switchModeText}>
+                {mode === "signIn"
+                  ? "¿No tenés cuenta? Creá una"
+                  : "¿Ya tenés cuenta? Iniciá sesión"}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -116,20 +139,45 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    justifyContent: "center",
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 32,
+  },
+  heroStage: {
+    width: "100%",
+    height: 300,
+  },
+  body: {
     paddingHorizontal: 28,
+    marginTop: 4,
+  },
+  eyebrow: {
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    color: colors.primarySoft,
+    textAlign: "center",
+    marginBottom: 6,
   },
   title: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: colors.primaryDark,
+    fontFamily: fonts.display,
+    fontSize: 40,
+    color: colors.text,
     textAlign: "center",
+  },
+  tagline: {
+    fontSize: 14,
+    color: colors.textMuted,
+    textAlign: "center",
+    marginTop: 8,
   },
   subtitle: {
     fontSize: 15,
-    color: colors.textMuted,
+    color: colors.textFaint,
     textAlign: "center",
-    marginTop: 6,
+    marginTop: 18,
     marginBottom: 32,
   },
   form: {
@@ -139,30 +187,37 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
+    borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
     color: colors.text,
   },
+  buttonWrap: {
+    borderRadius: 14,
+    marginTop: 4,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 16,
+    elevation: 6,
+  },
   button: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
+    borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
-    marginTop: 4,
   },
   buttonDisabled: {
     opacity: 0.7,
   },
   buttonText: {
-    color: colors.surface,
+    color: colors.background,
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   switchModeText: {
     textAlign: "center",
-    color: colors.primary,
+    color: colors.primarySoft,
     marginTop: 8,
     fontSize: 14,
   },
@@ -172,7 +227,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   info: {
-    color: colors.primaryDark,
+    color: colors.primarySoft,
     fontSize: 13,
     textAlign: "center",
   },

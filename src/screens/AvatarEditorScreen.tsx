@@ -8,9 +8,10 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
-import { colors } from "../lib/theme";
+import { colors, gradients } from "../lib/theme";
 import Sala3D from "../three/Sala3D";
 import MovementPad from "../components/MovementPad";
 import type { RootStackParamList } from "../navigation/RootNavigator";
@@ -96,10 +97,14 @@ export default function AvatarEditorScreen() {
   const avatarConfigActual: AvatarConfig = useMemo(
     () => ({
       capa: seleccion.capa
-        ? { id: seleccion.capa.id, nombre: seleccion.capa.nombre }
+        ? { id: seleccion.capa.id, nombre: seleccion.capa.nombre, model_url: seleccion.capa.model_url }
         : null,
       disfraz: seleccion.disfraz
-        ? { id: seleccion.disfraz.id, nombre: seleccion.disfraz.nombre }
+        ? {
+            id: seleccion.disfraz.id,
+            nombre: seleccion.disfraz.nombre,
+            model_url: seleccion.disfraz.model_url,
+          }
         : null,
       accesorio: seleccion.accesorio
         ? { id: seleccion.accesorio.id, nombre: seleccion.accesorio.nombre }
@@ -208,15 +213,22 @@ export default function AvatarEditorScreen() {
             <Text style={styles.secondaryButtonText}>🎲 Al azar</Text>
           </Pressable>
           <Pressable
-            style={[styles.primaryButton, saving && styles.buttonDisabled]}
+            style={[styles.primaryButtonWrap, saving && styles.buttonDisabled]}
             onPress={guardar}
             disabled={saving}
           >
-            {saving ? (
-              <ActivityIndicator color={colors.surface} />
-            ) : (
-              <Text style={styles.primaryButtonText}>Guardar</Text>
-            )}
+            <LinearGradient
+              colors={gradients.accent}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.primaryButton}
+            >
+              {saving ? (
+                <ActivityIndicator color={colors.background} />
+              ) : (
+                <Text style={styles.primaryButtonText}>Guardar</Text>
+              )}
+            </LinearGradient>
           </Pressable>
         </View>
 
@@ -270,12 +282,12 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 8,
-    backgroundColor: colors.background,
+    backgroundColor: colors.surfaceElevated,
     alignItems: "center",
     justifyContent: "center",
   },
   arrowText: {
-    color: colors.primaryDark,
+    color: colors.primarySoft,
     fontSize: 16,
   },
   selectorLabel: {
@@ -307,19 +319,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   secondaryButtonText: {
-    color: colors.primaryDark,
+    color: colors.primarySoft,
     fontWeight: "600",
   },
-  primaryButton: {
+  primaryButtonWrap: {
     flex: 1,
     borderRadius: 12,
-    backgroundColor: colors.primary,
+  },
+  primaryButton: {
+    borderRadius: 12,
     paddingVertical: 12,
     alignItems: "center",
   },
   primaryButtonText: {
-    color: colors.surface,
-    fontWeight: "600",
+    color: colors.background,
+    fontWeight: "700",
   },
   buttonDisabled: {
     opacity: 0.7,
@@ -336,7 +350,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   saved: {
-    color: colors.primaryDark,
+    color: colors.success,
     fontSize: 13,
     textAlign: "center",
     marginTop: 4,

@@ -57,9 +57,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     margin: 2,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 2,
   },
   buttonText: {
     fontSize: 18,
-    color: colors.primaryDark,
+    color: colors.primarySoft,
   },
 });

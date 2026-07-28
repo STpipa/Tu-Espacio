@@ -10,7 +10,11 @@ export interface AvatarItem {
   es_premium: boolean;
 }
 
-export type AvatarSeleccion = { id: string; nombre: string } | null;
+export type AvatarSeleccion = {
+  id: string;
+  nombre: string;
+  model_url?: string | null;
+} | null;
 
 export interface AvatarConfig {
   capa: AvatarSeleccion;

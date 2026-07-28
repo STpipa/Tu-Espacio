@@ -8,9 +8,10 @@ import {
   Text,
   View,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../contexts/AuthContext";
 import { elegirYSubirFotoPerfil } from "../lib/fotoPerfil";
-import { colors } from "../lib/theme";
+import { colors, gradients } from "../lib/theme";
 
 export default function FotoPerfil() {
   const { profile, refreshProfile } = useAuth();
@@ -36,42 +37,55 @@ export default function FotoPerfil() {
 
   return (
     <Pressable style={styles.container} onPress={elegirFoto} disabled={subiendo}>
-      {subiendo ? (
-        <View style={styles.circulo}>
-          <ActivityIndicator color={colors.primary} />
-        </View>
-      ) : profile?.foto_url ? (
-        <Image source={{ uri: profile.foto_url }} style={styles.circulo} />
-      ) : (
-        <View style={styles.circulo}>
-          <Text style={styles.inicial}>{inicial}</Text>
-        </View>
-      )}
+      <LinearGradient
+        colors={gradients.ring}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.ring}
+      >
+        {subiendo ? (
+          <View style={styles.circulo}>
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        ) : profile?.foto_url ? (
+          <Image source={{ uri: profile.foto_url }} style={styles.circulo} />
+        ) : (
+          <View style={styles.circulo}>
+            <Text style={styles.inicial}>{inicial}</Text>
+          </View>
+        )}
+      </LinearGradient>
       <Text style={styles.editarTexto}>Editar foto</Text>
     </Pressable>
   );
 }
 
 const TAMANO = 64;
+const RING_PADDING = 3;
 
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
   },
+  ring: {
+    width: TAMANO + RING_PADDING * 2,
+    height: TAMANO + RING_PADDING * 2,
+    borderRadius: (TAMANO + RING_PADDING * 2) / 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   circulo: {
     width: TAMANO,
     height: TAMANO,
     borderRadius: TAMANO / 2,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.surfaceElevated,
     alignItems: "center",
     justifyContent: "center",
   },
   inicial: {
     fontSize: 24,
     fontWeight: "700",
-    color: colors.primary,
+    color: colors.primarySoft,
   },
   editarTexto: {
     fontSize: 11,
