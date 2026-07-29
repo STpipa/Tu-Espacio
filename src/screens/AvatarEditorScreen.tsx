@@ -110,7 +110,11 @@ export default function AvatarEditorScreen() {
           }
         : null,
       accesorio: seleccion.accesorio
-        ? { id: seleccion.accesorio.id, nombre: seleccion.accesorio.nombre }
+        ? {
+            id: seleccion.accesorio.id,
+            nombre: seleccion.accesorio.nombre,
+            model_url: seleccion.accesorio.model_url,
+          }
         : null,
     }),
     [seleccion]

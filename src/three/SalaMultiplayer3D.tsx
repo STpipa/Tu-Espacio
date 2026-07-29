@@ -42,7 +42,11 @@ function avatarConfigDeJugador(
         }
       : null,
     accesorio: j.accesorioNombre
-      ? { id: j.accesorioNombre, nombre: j.accesorioNombre }
+      ? {
+          id: j.accesorioNombre,
+          nombre: j.accesorioNombre,
+          model_url: modelUrlPorNombre[j.accesorioNombre],
+        }
       : null,
   };
 }

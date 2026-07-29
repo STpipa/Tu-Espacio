@@ -53,6 +53,25 @@ class LimiteDeError extends React.Component<
   }
 }
 
+function AccesorioPlaceholder({ color }: { color: string }) {
+  return (
+    <mesh position={[0.55, 1.2, 0.1]} rotation={[0, 0, Math.PI / 5]} castShadow>
+      <boxGeometry args={[0.12, 0.5, 0.12]} />
+      <meshStandardMaterial color={color} />
+    </mesh>
+  );
+}
+
+function AccesorioModeloReal({ url }: { url: string }) {
+  const gltf = useLoader(GLTFLoader, url);
+  const escena = useMemo(() => gltf.scene.clone(true), [gltf]);
+  return (
+    <group position={[0.5, 0.9, 0.1]} rotation={[0, 0, Math.PI / 5]}>
+      <primitive object={escena} />
+    </group>
+  );
+}
+
 export default function AvatarModel({ config, position }: Props) {
   const cuerpoNombre = config.disfraz?.nombre ?? config.capa?.nombre ?? "Traje Clásico";
   const colorCuerpo = colorParaNombre(cuerpoNombre);
@@ -71,10 +90,19 @@ export default function AvatarModel({ config, position }: Props) {
       )}
 
       {config.accesorio ? (
-        <mesh position={[0.55, 1.2, 0.1]} rotation={[0, 0, Math.PI / 5]} castShadow>
-          <boxGeometry args={[0.12, 0.5, 0.12]} />
-          <meshStandardMaterial color={colorParaNombre(config.accesorio.nombre)} />
-        </mesh>
+        config.accesorio.model_url ? (
+          <LimiteDeError
+            fallback={<AccesorioPlaceholder color={colorParaNombre(config.accesorio.nombre)} />}
+          >
+            <Suspense
+              fallback={<AccesorioPlaceholder color={colorParaNombre(config.accesorio.nombre)} />}
+            >
+              <AccesorioModeloReal url={config.accesorio.model_url} />
+            </Suspense>
+          </LimiteDeError>
+        ) : (
+          <AccesorioPlaceholder color={colorParaNombre(config.accesorio.nombre)} />
+        )
       ) : null}
     </group>
   );
