@@ -1,6 +1,7 @@
 import React, { Suspense, useMemo } from "react";
 import { useLoader } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { clone as clonarConEsqueleto } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { ACCESORIO_TRANSFORM_DEFAULT, type AccesorioTransform, type AvatarConfig } from "../lib/types";
 import { colorParaNombre } from "./avatarVisuals";
 
@@ -33,8 +34,15 @@ function CuerpoPlaceholder({ color }: { color: string }) {
 function CuerpoModeloReal({ url }: { url: string }) {
   const gltf = useLoader(GLTFLoader, url);
   // Clonado: si dos avatares usan el mismo modelo, cada uno necesita su
-  // propia instancia de escena (three.js no permite un Object3D con dos padres).
-  const escena = useMemo(() => gltf.scene.clone(true), [gltf]);
+  // propia instancia de escena (three.js no permite un Object3D con dos
+  // padres). OJO: el `.clone(true)` genérico de Object3D NO clona bien
+  // los huesos de un modelo con esqueleto (los packs de itch.io vienen
+  // riggeados) — el mesh queda atado a los huesos ORIGINALES, que nunca se
+  // mueven ni rotan, así que el cuerpo se ve "pegado" en su lugar aunque
+  // el grupo padre se mueva o gire (el accesorio, sin huesos, sí se
+  // clona bien y por eso se movía solo). `SkeletonUtils.clone` remapea los
+  // huesos a la copia clonada correctamente.
+  const escena = useMemo(() => clonarConEsqueleto(gltf.scene), [gltf]);
   return <primitive object={escena} />;
 }
 
@@ -67,7 +75,9 @@ function AccesorioPlaceholder({ color, transform }: { color: string; transform: 
 
 function AccesorioModeloReal({ url, transform }: { url: string; transform: AccesorioTransform }) {
   const gltf = useLoader(GLTFLoader, url);
-  const escena = useMemo(() => gltf.scene.clone(true), [gltf]);
+  // Mismo motivo que en CuerpoModeloReal — por las dudas de que algún
+  // accesorio venga riggeado en vez de ser un mesh estático simple.
+  const escena = useMemo(() => clonarConEsqueleto(gltf.scene), [gltf]);
   return (
     <group position={transform.offset} rotation={[0, transform.rotacionY, 0]}>
       <primitive object={escena} />
