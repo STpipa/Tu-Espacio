@@ -24,17 +24,36 @@ export interface SalaJoinOptions {
   accessToken: string;
 }
 
-// Mismos ids que EnvironmentId en src/three/Environment.tsx del cliente.
-export type EntornoId = "noche" | "paraiso" | "infierno" | "tierra" | "mar";
+// Mismos ids que AmbienteId en src/lib/ambientes.ts del cliente: los 5
+// "Entornos" clásicos (src/three/Environment.tsx) + los 5 "Campos" nuevos
+// con motor de partículas reactivas (src/three/particles/camposAmbientales.ts).
+// El server no necesita distinguir cuáles traen motor de partículas y
+// cuáles no — solo valida que el id pedido exista.
+export type AmbienteId =
+  | "noche"
+  | "paraiso"
+  | "infierno"
+  | "tierra"
+  | "mar"
+  | "utero"
+  | "agujero_negro"
+  | "paraiso_luz"
+  | "infierno_submundo"
+  | "espacio_profundo";
 
-export const ENTORNOS_VALIDOS: EntornoId[] = [
+export const AMBIENTES_VALIDOS: AmbienteId[] = [
   "noche",
   "paraiso",
   "infierno",
   "tierra",
   "mar",
+  "utero",
+  "agujero_negro",
+  "paraiso_luz",
+  "infierno_submundo",
+  "espacio_profundo",
 ];
 
-export interface CambiarEntornoMensaje {
-  entorno: EntornoId;
+export interface CambiarAmbienteMensaje {
+  ambiente: AmbienteId;
 }

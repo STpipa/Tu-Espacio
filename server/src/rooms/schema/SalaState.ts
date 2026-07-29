@@ -3,5 +3,5 @@ import { PlayerState } from "./PlayerState";
 
 export class SalaState extends Schema {
   @type({ map: PlayerState }) players = new MapSchema<PlayerState>();
-  @type("string") entorno = "noche";
+  @type("string") ambiente = "noche";
 }

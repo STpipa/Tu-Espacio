@@ -14,9 +14,9 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuth } from "../contexts/AuthContext";
 import { useSalaRoom } from "../hooks/useSalaRoom";
 import SalaMultiplayer3D from "../three/SalaMultiplayer3D";
-import type { EnvironmentId } from "../three/Environment";
+import type { AmbienteId } from "../lib/ambientes";
 import MovementPad from "../components/MovementPad";
-import EnvironmentPicker from "../components/EnvironmentPicker";
+import AmbientePicker from "../components/AmbientePicker";
 import { colors } from "../lib/theme";
 import type { RootStackParamList } from "../navigation/RootNavigator";
 
@@ -25,7 +25,7 @@ export default function SalaEnVivoScreen() {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "SalaEnVivo">>();
   const { profile } = useAuth();
-  const { conectando, error, jugadores, miSessionId, entorno, mover, moderar, cambiarEntorno } =
+  const { conectando, error, jugadores, miSessionId, ambiente, mover, moderar, cambiarAmbiente } =
     useSalaRoom(route.params.codigo);
 
   const listaJugadores = useMemo(() => Object.values(jugadores), [jugadores]);
@@ -85,13 +85,13 @@ export default function SalaEnVivoScreen() {
       <View style={styles.escena3d}>
         <SalaMultiplayer3D
           jugadores={listaJugadores}
-          environment={entorno as EnvironmentId}
+          ambiente={ambiente as AmbienteId}
         />
 
         {soyModerador ? (
-          <EnvironmentPicker
-            value={entorno as EnvironmentId}
-            onChange={cambiarEntorno}
+          <AmbientePicker
+            value={ambiente as AmbienteId}
+            onChange={cambiarAmbiente}
           />
         ) : null}
 

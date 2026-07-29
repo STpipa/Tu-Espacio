@@ -14,7 +14,13 @@ export const CAMPOS_AMBIENTALES: CampoAmbientalConfig[] = [
     luzAmbiente: { color: "#FFB8D4", intensidad: 0.75 },
     luzDireccional: { color: "#FFD9E8", intensidad: 0.35, posicion: [2, 4, 2] },
     piso: { tipo: "reflectante", color: "#7A2A45" },
-    particulas: { color: "#FFD3E4", velocidadBase: 0.12, tamano: 0.09, carga: 0.3 },
+    particulas: {
+      color: "#FFD3E4",
+      velocidadBase: 0.12,
+      tamano: 0.09,
+      carga: 0.3,
+      energiaRepresentantePorDefecto: "atraccion",
+    },
   },
   {
     id: "agujero_negro",
@@ -31,6 +37,7 @@ export const CAMPOS_AMBIENTALES: CampoAmbientalConfig[] = [
       tamano: 0.05,
       carga: -0.6,
       fuerzaCentral: { tipo: "atraccion", radio: 9, intensidad: 3.2 },
+      energiaRepresentantePorDefecto: "turbulencia",
     },
   },
   {
@@ -42,7 +49,13 @@ export const CAMPOS_AMBIENTALES: CampoAmbientalConfig[] = [
     luzAmbiente: { color: "#FFF3D6", intensidad: 0.9 },
     luzDireccional: { color: "#FFEBB0", intensidad: 1.0, posicion: [5, 9, 4] },
     piso: { tipo: "reflectante", color: "#E8D9A0" },
-    particulas: { color: "#FFEFC2", velocidadBase: 0.15, tamano: 0.06, carga: 0.8 },
+    particulas: {
+      color: "#FFEFC2",
+      velocidadBase: 0.15,
+      tamano: 0.06,
+      carga: 0.8,
+      energiaRepresentantePorDefecto: "atraccion",
+    },
   },
   {
     id: "infierno_submundo",
@@ -53,7 +66,13 @@ export const CAMPOS_AMBIENTALES: CampoAmbientalConfig[] = [
     luzAmbiente: { color: "#FF6A3D", intensidad: 0.35 },
     luzDireccional: { color: "#FF3B1F", intensidad: 0.5, posicion: [2, 5, -3] },
     piso: { tipo: "agrietado", color: "#1F0F0C" },
-    particulas: { color: "#FF8A4D", velocidadBase: 0.6, tamano: 0.05, carga: -0.8 },
+    particulas: {
+      color: "#FF8A4D",
+      velocidadBase: 0.6,
+      tamano: 0.05,
+      carga: -0.8,
+      energiaRepresentantePorDefecto: "repulsion",
+    },
   },
   {
     id: "espacio_profundo",
@@ -64,7 +83,13 @@ export const CAMPOS_AMBIENTALES: CampoAmbientalConfig[] = [
     luzAmbiente: { color: "#6E8FD9", intensidad: 0.35 },
     luzDireccional: { color: "#BFD8FF", intensidad: 0.4, posicion: [-4, 5, 3] },
     piso: { tipo: "ninguno", color: "#000000" },
-    particulas: { color: "#9FD8FF", velocidadBase: 0.08, tamano: 0.07, carga: 0 },
+    particulas: {
+      color: "#9FD8FF",
+      velocidadBase: 0.08,
+      tamano: 0.07,
+      carga: 0,
+      energiaRepresentantePorDefecto: "turbulencia",
+    },
   },
 ];
 

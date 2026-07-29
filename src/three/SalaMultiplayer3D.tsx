@@ -1,18 +1,26 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Canvas } from "@react-three/fiber";
 import AvatarModel from "./AvatarModel";
 import OrbitRig from "./OrbitRig";
-import Environment, { type EnvironmentId } from "./Environment";
+import Environment from "./Environment";
+import CampoAmbientalRenderer from "./particles/CampoAmbientalRenderer";
+import { useParticleStore } from "./particles/particleStore";
+import { obtenerCampo } from "./particles/camposAmbientales";
 import { useOrbitCamera } from "./useOrbitCamera";
+import { esCampoConMotor, type AmbienteId } from "../lib/ambientes";
 import type { JugadorSala } from "../hooks/useSalaRoom";
 import type { AvatarConfig } from "../lib/types";
 import { obtenerCatalogoAvatares, mapaModelUrlPorNombre } from "../lib/catalogoAvatares";
 
 interface Props {
   jugadores: JugadorSala[];
-  environment: EnvironmentId;
+  ambiente: AmbienteId;
 }
+
+const RADIO_FUERZA_AVATAR = 3.2;
+const INTENSIDAD_FUERZA_AVATAR = 2.2;
+const ALTURA_FUERZA_AVATAR = 1.3;
 
 // La sincronización en Colyseus manda solo el nombre elegido (ver
 // PlayerState.ts), no la URL del modelo. Se resuelve acá contra el mismo
@@ -39,7 +47,60 @@ function avatarConfigDeJugador(
   };
 }
 
-export default function SalaMultiplayer3D({ jugadores, environment }: Props) {
+// Mientras el ambiente activo sea un "Campo" con motor de partículas, cada
+// jugador real de la sala se registra como fuente de fuerza (representante)
+// en el store del motor — así las partículas reaccionan a dónde está y se
+// mueve cada persona de verdad, no a esferas de demo. Se limpia sola cuando
+// alguien se va o el curador cambia a un ambiente sin motor.
+function useSincronizarRepresentantesReales(jugadores: JugadorSala[], ambiente: AmbienteId) {
+  const idsAnterioresRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const store = useParticleStore.getState();
+
+    if (!esCampoConMotor(ambiente)) {
+      idsAnterioresRef.current.forEach((id) => store.removeRepresentanteFuerza(id));
+      idsAnterioresRef.current = new Set();
+      return;
+    }
+
+    const tipoEnergia = obtenerCampo(ambiente).particulas.energiaRepresentantePorDefecto;
+    const idsActuales = new Set<string>();
+
+    for (const j of jugadores) {
+      const id = `avatar-${j.sessionId}`;
+      idsActuales.add(id);
+      const posicion: [number, number, number] = [j.x, ALTURA_FUERZA_AVATAR, j.z];
+      if (idsAnterioresRef.current.has(id)) {
+        store.updateRepresentantePosition(id, posicion);
+      } else {
+        store.addRepresentanteFuerza(
+          id,
+          posicion,
+          tipoEnergia,
+          RADIO_FUERZA_AVATAR,
+          INTENSIDAD_FUERZA_AVATAR
+        );
+      }
+    }
+
+    idsAnterioresRef.current.forEach((id) => {
+      if (!idsActuales.has(id)) store.removeRepresentanteFuerza(id);
+    });
+    idsAnterioresRef.current = idsActuales;
+  }, [jugadores, ambiente]);
+
+  // Limpieza si el componente se desmonta (se sale de la sala) mientras
+  // había representantes reales registrados.
+  useEffect(() => {
+    return () => {
+      const store = useParticleStore.getState();
+      idsAnterioresRef.current.forEach((id) => store.removeRepresentanteFuerza(id));
+    };
+  }, []);
+}
+
+export default function SalaMultiplayer3D({ jugadores, ambiente }: Props) {
   const { orbitState, panHandlers, containerRef } = useOrbitCamera({
     azimuth: 0.6,
     polar: 1.0,
@@ -59,10 +120,16 @@ export default function SalaMultiplayer3D({ jugadores, environment }: Props) {
     };
   }, []);
 
+  useSincronizarRepresentantesReales(jugadores, ambiente);
+
   return (
     <View ref={containerRef} style={styles.container} {...panHandlers}>
       <Canvas camera={{ position: [4, 4, 7], fov: 50 }}>
-        <Environment id={environment} size={14} />
+        {esCampoConMotor(ambiente) ? (
+          <CampoAmbientalRenderer campo={obtenerCampo(ambiente)} size={14} />
+        ) : (
+          <Environment id={ambiente} size={14} />
+        )}
 
         {jugadores.map((j) => (
           <AvatarModel

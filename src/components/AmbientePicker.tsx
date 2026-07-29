@@ -1,15 +1,17 @@
 import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { CAMPOS_AMBIENTALES } from "../three/particles/camposAmbientales";
-import type { CampoId } from "../three/particles/types";
+import { AMBIENTES, type AmbienteId } from "../lib/ambientes";
 import { colors } from "../lib/theme";
 
 interface Props {
-  value: CampoId;
-  onChange: (id: CampoId) => void;
+  value: AmbienteId;
+  onChange: (id: AmbienteId) => void;
 }
 
-export default function CampoPicker({ value, onChange }: Props) {
+// Picker de la sala en vivo: une los 5 Entornos "clásicos" con los 5 Campos
+// que traen el motor de partículas reactivas (marcados con ✨) en una sola
+// fila de chips, restringida al curador (ver SalaEnVivoScreen).
+export default function AmbientePicker({ value, onChange }: Props) {
   return (
     <ScrollView
       horizontal
@@ -17,16 +19,19 @@ export default function CampoPicker({ value, onChange }: Props) {
       style={styles.scroll}
       contentContainerStyle={styles.contenido}
     >
-      {CAMPOS_AMBIENTALES.map((campo) => {
-        const activo = campo.id === value;
+      {AMBIENTES.map((ambiente) => {
+        const activo = ambiente.id === value;
         return (
           <Pressable
-            key={campo.id}
+            key={ambiente.id}
             style={[styles.chip, activo && styles.chipActivo]}
-            onPress={() => onChange(campo.id)}
+            onPress={() => onChange(ambiente.id)}
           >
-            <View style={[styles.punto, { backgroundColor: campo.colorChip }]} />
-            <Text style={[styles.texto, activo && styles.textoActivo]}>{campo.label}</Text>
+            <View style={[styles.punto, { backgroundColor: ambiente.color }]} />
+            <Text style={[styles.texto, activo && styles.textoActivo]}>
+              {ambiente.conMotorDeParticulas ? "✨ " : ""}
+              {ambiente.label}
+            </Text>
           </Pressable>
         );
       })}

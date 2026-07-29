@@ -9,7 +9,6 @@ import LoadingScreen from "../screens/LoadingScreen";
 import OnboardingScreen from "../screens/OnboardingScreen";
 import AvatarEditorScreen from "../screens/AvatarEditorScreen";
 import SalaEnVivoScreen from "../screens/SalaEnVivoScreen";
-import ParticleLabScreen from "../screens/ParticleLabScreen";
 import { colors } from "../lib/theme";
 import { getOnboardingCompletado } from "../lib/onboarding";
 
@@ -20,7 +19,6 @@ export type RootStackParamList = {
   Curador: undefined;
   AvatarEditor: undefined;
   SalaEnVivo: { codigo: string };
-  ParticleLab: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -61,12 +59,6 @@ function pantallasComunes() {
       name="SalaEnVivo"
       component={SalaEnVivoScreen}
       options={{ ...headerOptions, title: "Sala en vivo" }}
-    />,
-    <Stack.Screen
-      key="ParticleLab"
-      name="ParticleLab"
-      component={ParticleLabScreen}
-      options={{ ...headerOptions, title: "Motor de partículas" }}
     />,
   ];
 }

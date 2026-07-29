@@ -3,8 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { SalaState } from "./schema/SalaState";
 import { PlayerState } from "./schema/PlayerState";
 import {
-  ENTORNOS_VALIDOS,
-  type CambiarEntornoMensaje,
+  AMBIENTES_VALIDOS,
+  type CambiarAmbienteMensaje,
   type ModeracionMensaje,
   type MoverMensaje,
   type SalaJoinOptions,
@@ -54,13 +54,13 @@ export class SalaRoom extends Room<SalaState> {
       this.manejarModeracion(client, message);
     });
 
-    this.onMessage("cambiarEntorno", (client, message: CambiarEntornoMensaje) => {
+    this.onMessage("cambiarAmbiente", (client, message: CambiarAmbienteMensaje) => {
       const solicitante = this.state.players.get(client.sessionId);
       if (!solicitante) return;
       const esModerador = solicitante.role === "curador" || solicitante.role === "super_admin";
       if (!esModerador) return;
-      if (!ENTORNOS_VALIDOS.includes(message.entorno)) return;
-      this.state.entorno = message.entorno;
+      if (!AMBIENTES_VALIDOS.includes(message.ambiente)) return;
+      this.state.ambiente = message.ambiente;
     });
   }
 

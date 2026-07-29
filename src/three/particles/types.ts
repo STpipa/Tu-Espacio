@@ -41,5 +41,10 @@ export interface CampoAmbientalConfig {
     // Fuerza ambiente propia del campo (ej. la atracción gravitacional
     // central del agujero negro), independiente de los representantes.
     fuerzaCentral?: { tipo: TipoEnergia; radio: number; intensidad: number };
+    // Qué tipo de fuerza emite cada representante (avatar) real presente en
+    // la sala mientras este campo está activo — así el mismo avatar "atrae"
+    // en Útero/Paraíso y "perturba" en Agujero negro/Infierno, sin que el
+    // curador tenga que configurar cada persona a mano.
+    energiaRepresentantePorDefecto: TipoEnergia;
   };
 }

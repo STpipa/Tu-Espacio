@@ -144,15 +144,6 @@ export default function CuradorScreen() {
             </Text>
           </Pressable>
 
-          <Pressable
-            style={styles.avatarButton}
-            onPress={() => navigation.navigate("ParticleLab")}
-          >
-            <Text style={styles.avatarButtonText}>
-              ✨ Laboratorio de partículas (demo)
-            </Text>
-          </Pressable>
-
           {errorMsg ? <Text style={styles.error}>{errorMsg}</Text> : null}
 
           {loading ? (
