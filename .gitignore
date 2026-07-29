@@ -40,3 +40,7 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# packs de assets 3D fuente (FBX/GLB descargados para convertir y subir a
+# Supabase Storage) — pesados y de licencias de terceros, no van al repo
+/assets-import
