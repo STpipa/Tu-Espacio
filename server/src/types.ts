@@ -23,3 +23,18 @@ export interface SalaJoinOptions {
   codigoAcceso: string;
   accessToken: string;
 }
+
+// Mismos ids que EnvironmentId en src/three/Environment.tsx del cliente.
+export type EntornoId = "noche" | "paraiso" | "infierno" | "tierra" | "mar";
+
+export const ENTORNOS_VALIDOS: EntornoId[] = [
+  "noche",
+  "paraiso",
+  "infierno",
+  "tierra",
+  "mar",
+];
+
+export interface CambiarEntornoMensaje {
+  entorno: EntornoId;
+}

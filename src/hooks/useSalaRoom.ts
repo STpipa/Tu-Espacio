@@ -33,6 +33,7 @@ interface EstadoSala {
   error: string | null;
   jugadores: Record<string, JugadorSala>;
   miSessionId: string | null;
+  entorno: string;
 }
 
 function snapshotJugador(sessionId: string, j: any): JugadorSala {
@@ -60,6 +61,7 @@ export function useSalaRoom(codigoAcceso: string | undefined) {
     error: null,
     jugadores: {},
     miSessionId: null,
+    entorno: "noche",
   });
 
   useEffect(() => {
@@ -114,6 +116,10 @@ export function useSalaRoom(codigoAcceso: string | undefined) {
           });
         });
 
+        $(room.state).listen("entorno", (entorno: string) => {
+          setEstado((prev) => ({ ...prev, entorno }));
+        });
+
         room.onLeave(() => {
           roomRef.current = null;
         });
@@ -122,6 +128,7 @@ export function useSalaRoom(codigoAcceso: string | undefined) {
           ...prev,
           conectando: false,
           miSessionId: room.sessionId,
+          entorno: room.state.entorno,
         }));
 
         // Cuenta como "asistencia" del mes para el límite gratis de
@@ -165,5 +172,9 @@ export function useSalaRoom(codigoAcceso: string | undefined) {
     []
   );
 
-  return { ...estado, mover, moderar };
+  const cambiarEntorno = useCallback((entorno: string) => {
+    roomRef.current?.send("cambiarEntorno", { entorno });
+  }, []);
+
+  return { ...estado, mover, moderar, cambiarEntorno };
 }

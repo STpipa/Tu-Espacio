@@ -14,7 +14,9 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuth } from "../contexts/AuthContext";
 import { useSalaRoom } from "../hooks/useSalaRoom";
 import SalaMultiplayer3D from "../three/SalaMultiplayer3D";
+import type { EnvironmentId } from "../three/Environment";
 import MovementPad from "../components/MovementPad";
+import EnvironmentPicker from "../components/EnvironmentPicker";
 import { colors } from "../lib/theme";
 import type { RootStackParamList } from "../navigation/RootNavigator";
 
@@ -23,7 +25,7 @@ export default function SalaEnVivoScreen() {
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, "SalaEnVivo">>();
   const { profile } = useAuth();
-  const { conectando, error, jugadores, miSessionId, mover, moderar } =
+  const { conectando, error, jugadores, miSessionId, entorno, mover, moderar, cambiarEntorno } =
     useSalaRoom(route.params.codigo);
 
   const listaJugadores = useMemo(() => Object.values(jugadores), [jugadores]);
@@ -81,19 +83,29 @@ export default function SalaEnVivoScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.escena3d}>
-        <SalaMultiplayer3D jugadores={listaJugadores} />
+        <SalaMultiplayer3D
+          jugadores={listaJugadores}
+          environment={entorno as EnvironmentId}
+        />
+
+        {soyModerador ? (
+          <EnvironmentPicker
+            value={entorno as EnvironmentId}
+            onChange={cambiarEntorno}
+          />
+        ) : null}
 
         <View style={styles.movementOverlay}>
           <MovementPad onMove={mimover} />
         </View>
 
         {yo?.congelado ? (
-          <View style={styles.avisoOverlay}>
+          <View style={[styles.avisoOverlay, { top: 56 }]}>
             <Text style={styles.avisoTexto}>🥶 Te congeló el curador</Text>
           </View>
         ) : null}
         {yo?.silenciado ? (
-          <View style={[styles.avisoOverlay, { top: 46 }]}>
+          <View style={[styles.avisoOverlay, { top: 90 }]}>
             <Text style={styles.avisoTexto}>🔇 Estás silenciado</Text>
           </View>
         ) : null}

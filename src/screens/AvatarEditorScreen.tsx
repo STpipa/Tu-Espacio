@@ -13,7 +13,9 @@ import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
 import { colors, gradients } from "../lib/theme";
 import Sala3D from "../three/Sala3D";
+import type { EnvironmentId } from "../three/Environment";
 import MovementPad from "../components/MovementPad";
+import EnvironmentPicker from "../components/EnvironmentPicker";
 import type { RootStackParamList } from "../navigation/RootNavigator";
 import type { AvatarCategoria, AvatarConfig, AvatarItem } from "../lib/types";
 
@@ -49,6 +51,7 @@ export default function AvatarEditorScreen() {
     accesorio: null,
   });
   const [posicion, setPosicion] = useState({ x: 0, z: 0 });
+  const [entorno, setEntorno] = useState<EnvironmentId>("noche");
 
   useEffect(() => {
     let isMounted = true;
@@ -180,7 +183,9 @@ export default function AvatarEditorScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.escena3d}>
-        <Sala3D avatarConfig={avatarConfigActual} avatarPosition={posicion} />
+        <Sala3D avatarConfig={avatarConfigActual} avatarPosition={posicion} environment={entorno} />
+
+        <EnvironmentPicker value={entorno} onChange={setEntorno} />
 
         <View style={styles.movementOverlay}>
           <MovementPad onMove={mover} />

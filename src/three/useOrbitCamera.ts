@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import { PanResponder } from "react-native";
+import { useEffect, useRef } from "react";
+import { PanResponder, Platform } from "react-native";
 
 export interface OrbitState {
   azimuth: number; // ángulo horizontal, en radianes
@@ -23,6 +23,10 @@ export function useOrbitCamera(initial: OrbitState) {
   const state = useRef<OrbitState>({ ...initial });
   const lastTouch = useRef<{ x: number; y: number } | null>(null);
   const lastDistance = useRef<number | null>(null);
+  // En web, react-native-web reenvía el ref de View al <div> real, así que
+  // acá se puede escuchar "wheel" directo — no existe como gesto de
+  // PanResponder (que solo conoce touches, no la rueda del mouse).
+  const containerRef = useRef<any>(null);
 
   const panResponder = useRef(
     PanResponder.create({
@@ -71,5 +75,19 @@ export function useOrbitCamera(initial: OrbitState) {
     })
   ).current;
 
-  return { orbitState: state, panHandlers: panResponder.panHandlers };
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const node = containerRef.current;
+    if (!node || typeof node.addEventListener !== "function") return;
+
+    function onWheel(e: WheelEvent) {
+      e.preventDefault();
+      state.current.radius = clamp(state.current.radius + e.deltaY * 0.01, 2.5, 12);
+    }
+
+    node.addEventListener("wheel", onWheel, { passive: false });
+    return () => node.removeEventListener("wheel", onWheel);
+  }, []);
+
+  return { orbitState: state, panHandlers: panResponder.panHandlers, containerRef };
 }

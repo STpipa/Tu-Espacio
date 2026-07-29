@@ -2,7 +2,13 @@ import { Room, Client } from "@colyseus/core";
 import { createClient } from "@supabase/supabase-js";
 import { SalaState } from "./schema/SalaState";
 import { PlayerState } from "./schema/PlayerState";
-import type { ModeracionMensaje, MoverMensaje, SalaJoinOptions } from "../types";
+import {
+  ENTORNOS_VALIDOS,
+  type CambiarEntornoMensaje,
+  type ModeracionMensaje,
+  type MoverMensaje,
+  type SalaJoinOptions,
+} from "../types";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
@@ -46,6 +52,15 @@ export class SalaRoom extends Room<SalaState> {
 
     this.onMessage("moderar", (client, message: ModeracionMensaje) => {
       this.manejarModeracion(client, message);
+    });
+
+    this.onMessage("cambiarEntorno", (client, message: CambiarEntornoMensaje) => {
+      const solicitante = this.state.players.get(client.sessionId);
+      if (!solicitante) return;
+      const esModerador = solicitante.role === "curador" || solicitante.role === "super_admin";
+      if (!esModerador) return;
+      if (!ENTORNOS_VALIDOS.includes(message.entorno)) return;
+      this.state.entorno = message.entorno;
     });
   }
 
