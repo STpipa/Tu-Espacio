@@ -18,6 +18,7 @@ export interface JugadorSala {
   capaNombre: string;
   disfrazNombre: string;
   accesorioNombre: string;
+  accesorioTransform: string;
 }
 
 export type AccionModeracion =
@@ -50,6 +51,7 @@ function snapshotJugador(sessionId: string, j: any): JugadorSala {
     capaNombre: j.capaNombre,
     disfrazNombre: j.disfrazNombre,
     accesorioNombre: j.accesorioNombre,
+    accesorioTransform: j.accesorioTransform,
   };
 }
 

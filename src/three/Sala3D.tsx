@@ -10,10 +10,16 @@ import type { AvatarConfig } from "../lib/types";
 interface Props {
   avatarConfig: AvatarConfig;
   avatarPosition: { x: number; z: number };
+  avatarRotation?: number;
   environment: EnvironmentId;
 }
 
-export default function Sala3D({ avatarConfig, avatarPosition, environment }: Props) {
+export default function Sala3D({
+  avatarConfig,
+  avatarPosition,
+  avatarRotation = 0,
+  environment,
+}: Props) {
   const { orbitState, panHandlers, containerRef } = useOrbitCamera({
     azimuth: 0.6,
     polar: 1.0,
@@ -28,6 +34,7 @@ export default function Sala3D({ avatarConfig, avatarPosition, environment }: Pr
         <AvatarModel
           config={avatarConfig}
           position={[avatarPosition.x, 0, avatarPosition.z]}
+          rotation={avatarRotation}
         />
 
         <OrbitRig orbitState={orbitState} />

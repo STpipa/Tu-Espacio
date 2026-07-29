@@ -10,8 +10,21 @@ import { obtenerCampo } from "./particles/camposAmbientales";
 import { useOrbitCamera } from "./useOrbitCamera";
 import { esCampoConMotor, type AmbienteId } from "../lib/ambientes";
 import type { JugadorSala } from "../hooks/useSalaRoom";
-import type { AvatarConfig } from "../lib/types";
+import type { AccesorioTransform, AvatarConfig } from "../lib/types";
 import { obtenerCatalogoAvatares, mapaModelUrlPorNombre } from "../lib/catalogoAvatares";
+
+function parsearAccesorioTransform(json: string): AccesorioTransform | undefined {
+  if (!json) return undefined;
+  try {
+    const valor = JSON.parse(json);
+    if (Array.isArray(valor?.offset) && typeof valor?.rotacionY === "number") {
+      return valor as AccesorioTransform;
+    }
+  } catch {
+    // Ignorar JSON inválido: AvatarModel cae solo al offset por defecto.
+  }
+  return undefined;
+}
 
 interface Props {
   jugadores: JugadorSala[];
@@ -48,6 +61,7 @@ function avatarConfigDeJugador(
           model_url: modelUrlPorNombre[j.accesorioNombre],
         }
       : null,
+    accesorioTransform: parsearAccesorioTransform(j.accesorioTransform),
   };
 }
 
@@ -140,6 +154,7 @@ export default function SalaMultiplayer3D({ jugadores, ambiente }: Props) {
             key={j.sessionId}
             config={avatarConfigDeJugador(j, modelUrlPorNombre)}
             position={[j.x, 0, j.z]}
+            rotation={j.rotY}
           />
         ))}
 

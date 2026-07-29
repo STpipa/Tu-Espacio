@@ -1,12 +1,15 @@
 import React, { Suspense, useMemo } from "react";
 import { useLoader } from "@react-three/fiber";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import type { AvatarConfig } from "../lib/types";
+import { ACCESORIO_TRANSFORM_DEFAULT, type AccesorioTransform, type AvatarConfig } from "../lib/types";
 import { colorParaNombre } from "./avatarVisuals";
 
 interface Props {
   config: AvatarConfig;
   position: [number, number, number];
+  // Hacia dónde mira el avatar (radianes, eje Y). 0 = orientación original
+  // del modelo.
+  rotation?: number;
 }
 
 // Placeholder mientras no haya (o falle la carga de) un modelo .glb real:
@@ -53,32 +56,33 @@ class LimiteDeError extends React.Component<
   }
 }
 
-function AccesorioPlaceholder({ color }: { color: string }) {
+function AccesorioPlaceholder({ color, transform }: { color: string; transform: AccesorioTransform }) {
   return (
-    <mesh position={[0.55, 1.2, 0.1]} rotation={[0, 0, Math.PI / 5]} castShadow>
+    <mesh position={transform.offset} rotation={[0, transform.rotacionY, 0]} castShadow>
       <boxGeometry args={[0.12, 0.5, 0.12]} />
       <meshStandardMaterial color={color} />
     </mesh>
   );
 }
 
-function AccesorioModeloReal({ url }: { url: string }) {
+function AccesorioModeloReal({ url, transform }: { url: string; transform: AccesorioTransform }) {
   const gltf = useLoader(GLTFLoader, url);
   const escena = useMemo(() => gltf.scene.clone(true), [gltf]);
   return (
-    <group position={[0.5, 0.9, 0.1]} rotation={[0, 0, Math.PI / 5]}>
+    <group position={transform.offset} rotation={[0, transform.rotacionY, 0]}>
       <primitive object={escena} />
     </group>
   );
 }
 
-export default function AvatarModel({ config, position }: Props) {
+export default function AvatarModel({ config, position, rotation = 0 }: Props) {
   const cuerpoNombre = config.disfraz?.nombre ?? config.capa?.nombre ?? "Traje Clásico";
   const colorCuerpo = colorParaNombre(cuerpoNombre);
   const modelUrl = config.disfraz?.model_url ?? config.capa?.model_url ?? null;
+  const accesorioTransform = config.accesorioTransform ?? ACCESORIO_TRANSFORM_DEFAULT;
 
   return (
-    <group position={position}>
+    <group position={position} rotation={[0, rotation, 0]}>
       {modelUrl ? (
         <LimiteDeError fallback={<CuerpoPlaceholder color={colorCuerpo} />}>
           <Suspense fallback={<CuerpoPlaceholder color={colorCuerpo} />}>
@@ -92,16 +96,29 @@ export default function AvatarModel({ config, position }: Props) {
       {config.accesorio ? (
         config.accesorio.model_url ? (
           <LimiteDeError
-            fallback={<AccesorioPlaceholder color={colorParaNombre(config.accesorio.nombre)} />}
+            fallback={
+              <AccesorioPlaceholder
+                color={colorParaNombre(config.accesorio.nombre)}
+                transform={accesorioTransform}
+              />
+            }
           >
             <Suspense
-              fallback={<AccesorioPlaceholder color={colorParaNombre(config.accesorio.nombre)} />}
+              fallback={
+                <AccesorioPlaceholder
+                  color={colorParaNombre(config.accesorio.nombre)}
+                  transform={accesorioTransform}
+                />
+              }
             >
-              <AccesorioModeloReal url={config.accesorio.model_url} />
+              <AccesorioModeloReal url={config.accesorio.model_url} transform={accesorioTransform} />
             </Suspense>
           </LimiteDeError>
         ) : (
-          <AccesorioPlaceholder color={colorParaNombre(config.accesorio.nombre)} />
+          <AccesorioPlaceholder
+            color={colorParaNombre(config.accesorio.nombre)}
+            transform={accesorioTransform}
+          />
         )
       ) : null}
     </group>

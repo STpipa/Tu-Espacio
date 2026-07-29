@@ -16,10 +16,25 @@ export type AvatarSeleccion = {
   model_url?: string | null;
 } | null;
 
+// Offset/rotación del accesorio relativo al cuerpo, ajustable a mano por el
+// usuario (antes era un valor fijo para todos los accesorios, y como cada
+// modelo tiene un tamaño/pivote distinto terminaba atravesando el cuerpo o
+// tapando la cara según el caso).
+export interface AccesorioTransform {
+  offset: [number, number, number];
+  rotacionY: number;
+}
+
+export const ACCESORIO_TRANSFORM_DEFAULT: AccesorioTransform = {
+  offset: [0.5, 0.9, 0.1],
+  rotacionY: Math.PI / 5,
+};
+
 export interface AvatarConfig {
   capa: AvatarSeleccion;
   disfraz: AvatarSeleccion;
   accesorio: AvatarSeleccion;
+  accesorioTransform?: AccesorioTransform;
 }
 
 export interface Profile {
@@ -44,5 +59,6 @@ export function normalizarAvatarConfig(raw: unknown): AvatarConfig {
     capa: value.capa ?? null,
     disfraz: value.disfraz ?? null,
     accesorio: value.accesorio ?? null,
+    accesorioTransform: value.accesorioTransform ?? undefined,
   };
 }

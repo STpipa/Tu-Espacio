@@ -15,9 +15,17 @@ import { colors, gradients } from "../lib/theme";
 import Sala3D from "../three/Sala3D";
 import type { EnvironmentId } from "../three/Environment";
 import MovementPad from "../components/MovementPad";
+import RotationPad from "../components/RotationPad";
+import AccesorioAjustePanel from "../components/AccesorioAjustePanel";
 import EnvironmentPicker from "../components/EnvironmentPicker";
 import type { RootStackParamList } from "../navigation/RootNavigator";
-import type { AvatarCategoria, AvatarConfig, AvatarItem } from "../lib/types";
+import {
+  ACCESORIO_TRANSFORM_DEFAULT,
+  type AccesorioTransform,
+  type AvatarCategoria,
+  type AvatarConfig,
+  type AvatarItem,
+} from "../lib/types";
 
 type CatalogoPorCategoria = Record<AvatarCategoria, AvatarItem[]>;
 
@@ -51,7 +59,11 @@ export default function AvatarEditorScreen() {
     accesorio: null,
   });
   const [posicion, setPosicion] = useState({ x: 0, z: 0 });
+  const [rotacion, setRotacion] = useState(0);
   const [entorno, setEntorno] = useState<EnvironmentId>("noche");
+  const [accesorioTransform, setAccesorioTransform] = useState<AccesorioTransform>(
+    ACCESORIO_TRANSFORM_DEFAULT
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -87,6 +99,7 @@ export default function AvatarEditorScreen() {
         accesorio:
           agrupado.accesorio.find((i) => i.id === inicial?.accesorio?.id) ?? null,
       });
+      setAccesorioTransform(inicial?.accesorioTransform ?? ACCESORIO_TRANSFORM_DEFAULT);
       setLoading(false);
     }
 
@@ -116,8 +129,9 @@ export default function AvatarEditorScreen() {
             model_url: seleccion.accesorio.model_url,
           }
         : null,
+      accesorioTransform,
     }),
-    [seleccion]
+    [seleccion, accesorioTransform]
   );
 
   const ciclar = useCallback(
@@ -176,6 +190,10 @@ export default function AvatarEditorScreen() {
     }));
   }
 
+  function girar(deltaRadianes: number) {
+    setRotacion((prev) => prev + deltaRadianes);
+  }
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -187,12 +205,21 @@ export default function AvatarEditorScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.escena3d}>
-        <Sala3D avatarConfig={avatarConfigActual} avatarPosition={posicion} environment={entorno} />
+        <Sala3D
+          avatarConfig={avatarConfigActual}
+          avatarPosition={posicion}
+          avatarRotation={rotacion}
+          environment={entorno}
+        />
 
         <EnvironmentPicker value={entorno} onChange={setEntorno} />
 
         <View style={styles.movementOverlay}>
           <MovementPad onMove={mover} />
+        </View>
+
+        <View style={styles.rotationOverlay}>
+          <RotationPad onGirar={girar} />
         </View>
       </View>
 
@@ -213,6 +240,10 @@ export default function AvatarEditorScreen() {
             </Pressable>
           </View>
         ))}
+
+        {seleccion.accesorio ? (
+          <AccesorioAjustePanel transform={accesorioTransform} onChange={setAccesorioTransform} />
+        ) : null}
 
         {errorMsg ? <Text style={styles.error}>{errorMsg}</Text> : null}
         {savedMsg ? <Text style={styles.saved}>{savedMsg}</Text> : null}
@@ -271,6 +302,11 @@ const styles = StyleSheet.create({
   movementOverlay: {
     position: "absolute",
     left: 16,
+    bottom: 16,
+  },
+  rotationOverlay: {
+    position: "absolute",
+    right: 16,
     bottom: 16,
   },
   panel: {

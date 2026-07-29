@@ -21,6 +21,7 @@ interface AvatarConfigDb {
   capa?: { nombre?: string } | null;
   disfraz?: { nombre?: string } | null;
   accesorio?: { nombre?: string } | null;
+  accesorioTransform?: { offset?: number[]; rotacionY?: number } | null;
 }
 
 interface AuthResult {
@@ -122,6 +123,9 @@ export class SalaRoom extends Room<SalaState> {
     player.capaNombre = auth.avatarConfig?.capa?.nombre ?? "";
     player.disfrazNombre = auth.avatarConfig?.disfraz?.nombre ?? "";
     player.accesorioNombre = auth.avatarConfig?.accesorio?.nombre ?? "";
+    player.accesorioTransform = auth.avatarConfig?.accesorioTransform
+      ? JSON.stringify(auth.avatarConfig.accesorioTransform)
+      : "";
     this.state.players.set(client.sessionId, player);
   }
 

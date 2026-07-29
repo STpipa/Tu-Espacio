@@ -16,6 +16,7 @@ import { useSalaRoom } from "../hooks/useSalaRoom";
 import SalaMultiplayer3D from "../three/SalaMultiplayer3D";
 import type { AmbienteId } from "../lib/ambientes";
 import MovementPad from "../components/MovementPad";
+import RotationPad from "../components/RotationPad";
 import AmbientePicker from "../components/AmbientePicker";
 import { colors } from "../lib/theme";
 import type { RootStackParamList } from "../navigation/RootNavigator";
@@ -37,7 +38,12 @@ export default function SalaEnVivoScreen() {
     if (!yo || yo.congelado) return;
     const nuevoX = Math.max(-5, Math.min(5, yo.x + dx * 0.6));
     const nuevoZ = Math.max(-5, Math.min(5, yo.z + dz * 0.6));
-    mover(nuevoX, nuevoZ, 0);
+    mover(nuevoX, nuevoZ, yo.rotY);
+  }
+
+  function mirotar(deltaRadianes: number) {
+    if (!yo || yo.congelado) return;
+    mover(yo.x, yo.z, yo.rotY + deltaRadianes);
   }
 
   function confirmarExpulsar(sessionId: string, email: string) {
@@ -97,6 +103,10 @@ export default function SalaEnVivoScreen() {
 
         <View style={styles.movementOverlay}>
           <MovementPad onMove={mimover} />
+        </View>
+
+        <View style={styles.rotationOverlay}>
+          <RotationPad onGirar={mirotar} />
         </View>
 
         {yo?.congelado ? (
@@ -198,6 +208,11 @@ const styles = StyleSheet.create({
   movementOverlay: {
     position: "absolute",
     left: 16,
+    bottom: 16,
+  },
+  rotationOverlay: {
+    position: "absolute",
+    right: 16,
     bottom: 16,
   },
   avisoOverlay: {
