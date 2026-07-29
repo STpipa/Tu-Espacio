@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { ENTORNOS, type EnvironmentId } from "../three/Environment";
 import { colors } from "../lib/theme";
+import { useHorizontalDragScroll } from "../lib/useHorizontalDragScroll";
 
 interface Props {
   value: EnvironmentId;
@@ -9,8 +10,10 @@ interface Props {
 }
 
 export default function EnvironmentPicker({ value, onChange }: Props) {
+  const scrollRef = useHorizontalDragScroll();
   return (
     <ScrollView
+      ref={scrollRef}
       horizontal
       showsHorizontalScrollIndicator={false}
       style={styles.scroll}

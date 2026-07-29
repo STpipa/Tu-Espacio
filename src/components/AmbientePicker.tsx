@@ -2,6 +2,7 @@ import React from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { AMBIENTES, type AmbienteId } from "../lib/ambientes";
 import { colors } from "../lib/theme";
+import { useHorizontalDragScroll } from "../lib/useHorizontalDragScroll";
 
 interface Props {
   value: AmbienteId;
@@ -12,8 +13,10 @@ interface Props {
 // que traen el motor de partículas reactivas (marcados con ✨) en una sola
 // fila de chips, restringida al curador (ver SalaEnVivoScreen).
 export default function AmbientePicker({ value, onChange }: Props) {
+  const scrollRef = useHorizontalDragScroll();
   return (
     <ScrollView
+      ref={scrollRef}
       horizontal
       showsHorizontalScrollIndicator={false}
       style={styles.scroll}

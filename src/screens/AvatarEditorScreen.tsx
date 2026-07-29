@@ -2,8 +2,10 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -11,7 +13,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../lib/supabase";
-import { colors, gradients } from "../lib/theme";
+import { colors, fonts, gradients } from "../lib/theme";
 import Sala3D from "../three/Sala3D";
 import type { EnvironmentId } from "../three/Environment";
 import MovementPad from "../components/MovementPad";
@@ -35,6 +37,12 @@ const CATEGORIAS: { key: AvatarCategoria; label: string; opcional: boolean }[] =
   { key: "accesorio", label: "Accesorio", opcional: true },
 ];
 
+// A partir de este ancho se muestra el panel de edición al costado de la
+// escena 3D (como un creador de personaje clásico); por debajo, apilado
+// arriba/abajo, para no dejar el avatar apretado en pantallas angostas.
+const UMBRAL_LAYOUT_LATERAL = 700;
+const ANCHO_PANEL_LATERAL = 320;
+
 function opcionesConNinguno(items: AvatarItem[], opcional: boolean) {
   return opcional ? [null, ...items] : items;
 }
@@ -43,6 +51,8 @@ export default function AvatarEditorScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { profile, refreshProfile } = useAuth();
+  const { width } = useWindowDimensions();
+  const layoutLateral = width >= UMBRAL_LAYOUT_LATERAL;
 
   const [catalogo, setCatalogo] = useState<CatalogoPorCategoria>({
     capa: [],
@@ -58,6 +68,7 @@ export default function AvatarEditorScreen() {
     disfraz: null,
     accesorio: null,
   });
+  const [tabActiva, setTabActiva] = useState<AvatarCategoria>("capa");
   const [posicion, setPosicion] = useState({ x: 0, z: 0 });
   const [rotacion, setRotacion] = useState(0);
   const [entorno, setEntorno] = useState<EnvironmentId>("noche");
@@ -203,7 +214,7 @@ export default function AvatarEditorScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, layoutLateral && styles.containerLateral]}>
       <View style={styles.escena3d}>
         <Sala3D
           avatarConfig={avatarConfigActual}
@@ -223,25 +234,40 @@ export default function AvatarEditorScreen() {
         </View>
       </View>
 
-      <View style={styles.panel}>
-        {CATEGORIAS.map(({ key, label }) => (
-          <View key={key} style={styles.selectorRow}>
-            <Pressable style={styles.arrow} onPress={() => ciclar(key, -1)}>
-              <Text style={styles.arrowText}>◀</Text>
-            </Pressable>
-            <View style={styles.selectorLabel}>
-              <Text style={styles.selectorCategoria}>{label}</Text>
-              <Text style={styles.selectorNombre}>
-                {seleccion[key]?.nombre ?? "Ninguno"}
-              </Text>
-            </View>
-            <Pressable style={styles.arrow} onPress={() => ciclar(key, 1)}>
-              <Text style={styles.arrowText}>▶</Text>
-            </Pressable>
-          </View>
-        ))}
+      <ScrollView
+        style={[styles.panel, layoutLateral ? styles.panelLateral : styles.panelInferior]}
+        contentContainerStyle={styles.panelContenido}
+      >
+        <View style={styles.tabs}>
+          {CATEGORIAS.map(({ key, label }) => {
+            const activa = tabActiva === key;
+            return (
+              <Pressable
+                key={key}
+                style={[styles.tab, activa && styles.tabActiva]}
+                onPress={() => setTabActiva(key)}
+              >
+                <Text style={[styles.tabTexto, activa && styles.tabTextoActivo]}>{label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
 
-        {seleccion.accesorio ? (
+        <View style={styles.selectorRow}>
+          <Pressable style={styles.arrow} onPress={() => ciclar(tabActiva, -1)}>
+            <Text style={styles.arrowText}>◀</Text>
+          </Pressable>
+          <View style={styles.selectorLabel}>
+            <Text style={styles.selectorNombre}>
+              {seleccion[tabActiva]?.nombre ?? "Ninguno"}
+            </Text>
+          </View>
+          <Pressable style={styles.arrow} onPress={() => ciclar(tabActiva, 1)}>
+            <Text style={styles.arrowText}>▶</Text>
+          </Pressable>
+        </View>
+
+        {tabActiva === "accesorio" && seleccion.accesorio ? (
           <AccesorioAjustePanel transform={accesorioTransform} onChange={setAccesorioTransform} />
         ) : null}
 
@@ -275,7 +301,7 @@ export default function AvatarEditorScreen() {
         <Pressable onPress={() => navigation.goBack()}>
           <Text style={styles.backText}>Volver</Text>
         </Pressable>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -289,6 +315,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  containerLateral: {
+    flexDirection: "row",
   },
   escena3d: {
     flex: 1,
@@ -311,11 +340,47 @@ const styles = StyleSheet.create({
   },
   panel: {
     backgroundColor: colors.surface,
+  },
+  panelInferior: {
+    maxHeight: "48%",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 16,
     borderTopWidth: 1,
     borderColor: colors.border,
+  },
+  panelLateral: {
+    width: ANCHO_PANEL_LATERAL,
+    borderLeftWidth: 1,
+    borderColor: colors.border,
+  },
+  panelContenido: {
+    padding: 16,
+  },
+  tabs: {
+    flexDirection: "row",
+    gap: 6,
+    marginBottom: 14,
+  },
+  tab: {
+    flex: 1,
+    borderRadius: 10,
+    paddingVertical: 8,
+    alignItems: "center",
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  tabActiva: {
+    borderColor: colors.primarySoft,
+    borderWidth: 2,
+  },
+  tabTexto: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.textMuted,
+  },
+  tabTextoActivo: {
+    color: colors.text,
   },
   selectorRow: {
     flexDirection: "row",
@@ -339,21 +404,16 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
   },
-  selectorCategoria: {
-    fontSize: 12,
-    color: colors.textMuted,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
   selectorNombre: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontFamily: fonts.display,
+    fontSize: 17,
     color: colors.text,
+    textAlign: "center",
   },
   buttonsRow: {
     flexDirection: "row",
     gap: 10,
-    marginTop: 8,
+    marginTop: 14,
   },
   secondaryButton: {
     flex: 1,
