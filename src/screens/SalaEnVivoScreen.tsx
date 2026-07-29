@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -41,9 +41,15 @@ export default function SalaEnVivoScreen() {
     mover(nuevoX, nuevoZ, yo.rotY);
   }
 
+  // Ref en vez de yo.rotY: un drag dispara muchos eventos antes de que el
+  // eco del server actualice el estado, así que leer yo.rotY en cada uno
+  // parte siempre de la misma base vieja y no acumula.
+  const miRotacionRef = useRef<number | null>(null);
   function mirotar(deltaRadianes: number) {
     if (!yo || yo.congelado) return;
-    mover(yo.x, yo.z, yo.rotY + deltaRadianes);
+    if (miRotacionRef.current === null) miRotacionRef.current = yo.rotY;
+    miRotacionRef.current += deltaRadianes;
+    mover(yo.x, yo.z, miRotacionRef.current);
   }
 
   function confirmarExpulsar(sessionId: string, email: string) {
