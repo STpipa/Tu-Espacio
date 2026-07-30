@@ -117,6 +117,20 @@ export class SalaRoom extends Room<SalaState> {
   }
 
   onJoin(client: Client, _options: SalaJoinOptions, auth: AuthResult) {
+    // Evita "personajes duplicados": la misma cuenta conectada desde otro
+    // dispositivo/pestaña (ej. probar con el celular sin salir de la
+    // sesión de escritorio) generaba dos avatares para la misma persona.
+    // Una cuenta, un avatar en la sala a la vez — se desconecta la sesión
+    // vieja antes de sumar la nueva.
+    for (const [sessionId, jugador] of this.state.players.entries()) {
+      if (jugador.userId === auth.userId) {
+        this.clients.find((c) => c.sessionId === sessionId)?.leave(
+          4001,
+          "Te conectaste a la sala desde otro dispositivo o pestaña"
+        );
+      }
+    }
+
     const player = new PlayerState();
     player.userId = auth.userId;
     player.email = auth.email;
