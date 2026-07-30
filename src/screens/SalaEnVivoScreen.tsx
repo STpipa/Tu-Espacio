@@ -131,33 +131,33 @@ export default function SalaEnVivoScreen() {
         ) : null}
       </View>
 
-      <View style={styles.panel}>
-        <Pressable
-          style={styles.panelHeader}
-          onPress={() => setPanelAbierto((v) => !v)}
-        >
-          <Text style={styles.panelTitulo}>
-            En la sala ({listaJugadores.length})
-          </Text>
-          <Text style={styles.caret}>{panelAbierto ? "▾" : "▴"}</Text>
-        </Pressable>
+      {soyModerador ? (
+        <View style={styles.panel}>
+          <Pressable
+            style={styles.panelHeader}
+            onPress={() => setPanelAbierto((v) => !v)}
+          >
+            <Text style={styles.panelTitulo}>
+              En la sala ({listaJugadores.length})
+            </Text>
+            <Text style={styles.caret}>{panelAbierto ? "▾" : "▴"}</Text>
+          </Pressable>
 
-        {panelAbierto ? (
-          <ScrollView style={styles.lista}>
-            {otros.length === 0 ? (
-              <Text style={styles.mutedText}>Sos el único acá por ahora.</Text>
-            ) : (
-              otros.map((j) => (
-                <View key={j.sessionId} style={styles.jugadorRow}>
-                  <View style={styles.jugadorInfo}>
-                    <Text style={styles.jugadorEmail}>{j.email}</Text>
-                    <Text style={styles.jugadorRole}>
-                      {j.role}
-                      {j.congelado ? " · congelado" : ""}
-                      {j.silenciado ? " · silenciado" : ""}
-                    </Text>
-                  </View>
-                  {soyModerador ? (
+          {panelAbierto ? (
+            <ScrollView style={styles.lista}>
+              {otros.length === 0 ? (
+                <Text style={styles.mutedText}>Sos el único acá por ahora.</Text>
+              ) : (
+                otros.map((j) => (
+                  <View key={j.sessionId} style={styles.jugadorRow}>
+                    <View style={styles.jugadorInfo}>
+                      <Text style={styles.jugadorEmail}>{j.email}</Text>
+                      <Text style={styles.jugadorRole}>
+                        {j.role}
+                        {j.congelado ? " · congelado" : ""}
+                        {j.silenciado ? " · silenciado" : ""}
+                      </Text>
+                    </View>
                     <View style={styles.acciones}>
                       <Pressable
                         style={styles.accionBoton}
@@ -194,13 +194,13 @@ export default function SalaEnVivoScreen() {
                         <Text style={styles.accionTexto}>🚪</Text>
                       </Pressable>
                     </View>
-                  ) : null}
-                </View>
-              ))
-            )}
-          </ScrollView>
-        ) : null}
-      </View>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+          ) : null}
+        </View>
+      ) : null}
     </View>
   );
 }
