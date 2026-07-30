@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Room, RoomEvent, Track, type RemoteTrack } from "livekit-client";
 import { supabase } from "./supabase";
 import { httpEndpoint } from "./colyseus";
@@ -7,6 +7,7 @@ export interface EstadoVoz {
   conectado: boolean;
   micHabilitado: boolean;
   error: string | null;
+  alternarMic: () => void;
 }
 
 // Audio real de la sala vía LiveKit — versión web (WebRTC del navegador,
@@ -19,11 +20,15 @@ export function useVoz(
 ): EstadoVoz {
   const roomRef = useRef<Room | null>(null);
   const elementosRef = useRef<HTMLMediaElement[]>([]);
-  const [estado, setEstado] = useState<EstadoVoz>({
+  // El mic propio (tocando el ícono) es aparte del mute que impone el
+  // curador — si el curador te silenció, no podés reactivarte solo.
+  const [autoSilenciado, setAutoSilenciado] = useState(false);
+  const [estado, setEstado] = useState<{ conectado: boolean; error: string | null }>({
     conectado: false,
-    micHabilitado: false,
     error: null,
   });
+
+  const micDebeEstarActivo = !silenciadoPorModerador && !autoSilenciado;
 
   useEffect(() => {
     if (!codigoAcceso) return;
@@ -50,6 +55,12 @@ export function useVoz(
         const accessToken = data.session?.access_token;
         if (!accessToken) throw new Error("No hay sesión activa");
 
+        if (!navigator.mediaDevices?.getUserMedia) {
+          throw new Error(
+            "El navegador bloqueó el micrófono: hace falta HTTPS (o localhost). Probar desde la web publicada."
+          );
+        }
+
         const res = await fetch(`${httpEndpoint()}/voz/token`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -65,8 +76,8 @@ export function useVoz(
           return;
         }
 
-        await room.localParticipant.setMicrophoneEnabled(!silenciadoPorModerador);
-        setEstado({ conectado: true, micHabilitado: !silenciadoPorModerador, error: null });
+        await room.localParticipant.setMicrophoneEnabled(micDebeEstarActivo);
+        setEstado({ conectado: true, error: null });
       } catch (err) {
         if (!activo) return;
         setEstado((prev) => ({
@@ -89,15 +100,18 @@ export function useVoz(
   }, [codigoAcceso]);
 
   // El curador puede silenciar/habilitar en cualquier momento (ver
-  // SalaRoom.ts "moderar") — sincroniza el mic real sin reconectar la sala.
+  // SalaRoom.ts "moderar"), y el propio usuario puede tocar el ícono —
+  // cualquiera de los dos cambia el mic real sin reconectar la sala.
   useEffect(() => {
     const room = roomRef.current;
     if (!room?.localParticipant) return;
-    room.localParticipant
-      .setMicrophoneEnabled(!silenciadoPorModerador)
-      .then(() => setEstado((prev) => ({ ...prev, micHabilitado: !silenciadoPorModerador })))
-      .catch(() => {});
+    room.localParticipant.setMicrophoneEnabled(micDebeEstarActivo).catch(() => {});
+  }, [micDebeEstarActivo]);
+
+  const alternarMic = useCallback(() => {
+    if (silenciadoPorModerador) return;
+    setAutoSilenciado((v) => !v);
   }, [silenciadoPorModerador]);
 
-  return estado;
+  return { ...estado, micHabilitado: micDebeEstarActivo, alternarMic };
 }

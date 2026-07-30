@@ -49,8 +49,16 @@ export async function pedirPermisoMicrofono(): Promise<boolean> {
   );
   if (!confirmo) return false;
 
-  const { status } = await Audio.requestRecordingPermissionsAsync();
-  return status === "granted";
+  // En Expo Go (a diferencia de un build propio) algunas de estas APIs
+  // nativas pueden tirar en vez de devolver "denied" prolijamente — sin
+  // este try/catch, esa excepción sin capturar tiraba la pantalla entera
+  // en vez de solo mostrar el botón como no concedido.
+  try {
+    const { status } = await Audio.requestRecordingPermissionsAsync();
+    return status === "granted";
+  } catch {
+    return false;
+  }
 }
 
 export async function pedirPermisoNotificaciones(): Promise<boolean> {
@@ -60,6 +68,13 @@ export async function pedirPermisoNotificaciones(): Promise<boolean> {
   );
   if (!confirmo) return false;
 
-  const { status } = await Notifications.requestPermissionsAsync();
-  return status === "granted";
+  // Expo Go (desde el SDK 53) ya no soporta notificaciones push de verdad
+  // — pedir el permiso puede tirar en vez de devolver "denied". Con un
+  // build propio (dev client / EAS) esto anda normal.
+  try {
+    const { status } = await Notifications.requestPermissionsAsync();
+    return status === "granted";
+  } catch {
+    return false;
+  }
 }

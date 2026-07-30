@@ -121,11 +121,23 @@ export default function SalaEnVivoScreen() {
           <RotationPad onGirar={mirotar} />
         </View>
 
-        <View style={styles.vozOverlay}>
+        <Pressable
+          style={styles.vozOverlay}
+          onPress={voz.alternarMic}
+          disabled={!voz.conectado || yo?.silenciado}
+        >
           <Text style={styles.vozTexto}>
-            {voz.error ? `🎙️⚠️ ${voz.error}` : voz.conectado ? (voz.micHabilitado ? "🎙️" : "🔇") : "🎙️…"}
+            {voz.error
+              ? `🎙️⚠️ ${voz.error}`
+              : !voz.conectado
+              ? "🎙️…"
+              : yo?.silenciado
+              ? "🔇 silenciado por el curador"
+              : voz.micHabilitado
+              ? "🎙️ tocar para silenciar"
+              : "🔇 tocar para activar"}
           </Text>
-        </View>
+        </Pressable>
 
         {yo?.congelado ? (
           <View style={[styles.avisoOverlay, { top: 56 }]}>
