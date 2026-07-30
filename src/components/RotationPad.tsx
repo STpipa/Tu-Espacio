@@ -1,58 +1,46 @@
-import React, { useRef } from "react";
-import { PanResponder, StyleSheet, Text, View } from "react-native";
+import React from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "../lib/theme";
 
 interface Props {
-  // Se llama en cada movimiento del arrastre con el delta a sumar a la
-  // rotación actual (radianes). No devuelve un valor absoluto para poder
-  // usarse tanto en un estado local (editor) como enviando deltas a
-  // Colyseus (sala en vivo).
+  // Delta a sumar a la rotación actual (radianes) por cada toque. No
+  // devuelve un valor absoluto para poder usarse tanto en un estado local
+  // (editor) como enviando deltas a Colyseus (sala en vivo).
   onGirar: (deltaRadianes: number) => void;
 }
 
-// Zona de arrastre separada del lienzo 3D (que ya usa el drag para orbitar
-// la cámara) para girar al propio avatar 360° con el mouse/dedo sin que
-// los dos gestos se pisen.
+const PASO_ROTACION = Math.PI / 10; // 18° por toque
+
+// Antes esto era un dial que solo giraba arrastrando el dedo/mouse — se
+// veía como un botón (ícono + "Girar") pero no respondía a un toque
+// simple, así que tocarlo no hacía nada. Dos botones de toque, mismo
+// patrón que MovementPad.
 export default function RotationPad({ onGirar }: Props) {
-  const ultimoX = useRef<number | null>(null);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (evt) => {
-        ultimoX.current = evt.nativeEvent.pageX;
-      },
-      onPanResponderMove: (evt) => {
-        const x = evt.nativeEvent.pageX;
-        if (ultimoX.current != null) {
-          const dx = x - ultimoX.current;
-          onGirar(dx * 0.012);
-        }
-        ultimoX.current = x;
-      },
-      onPanResponderRelease: () => {
-        ultimoX.current = null;
-      },
-      onPanResponderTerminate: () => {
-        ultimoX.current = null;
-      },
-    })
-  ).current;
-
   return (
-    <View style={styles.pad} {...panResponder.panHandlers}>
-      <Text style={styles.icono}>↻</Text>
-      <Text style={styles.texto}>Girar</Text>
+    <View style={styles.pad}>
+      <Boton texto="↺" onPress={() => onGirar(-PASO_ROTACION)} />
+      <Boton texto="↻" onPress={() => onGirar(PASO_ROTACION)} />
     </View>
+  );
+}
+
+function Boton({ texto, onPress }: { texto: string; onPress: () => void }) {
+  return (
+    <Pressable style={styles.button} onPress={onPress}>
+      <Text style={styles.buttonText}>{texto}</Text>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   pad: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    flexDirection: "row",
+    gap: 8,
+  },
+  button: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
@@ -64,13 +52,8 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
-  icono: {
-    fontSize: 18,
+  buttonText: {
+    fontSize: 20,
     color: colors.primarySoft,
-  },
-  texto: {
-    fontSize: 9,
-    color: colors.textMuted,
-    marginTop: 2,
   },
 });

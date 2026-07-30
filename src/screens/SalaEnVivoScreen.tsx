@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -29,6 +29,10 @@ export default function SalaEnVivoScreen() {
   const { conectando, error, jugadores, miSessionId, ambiente, mover, moderar, cambiarAmbiente } =
     useSalaRoom(route.params.codigo);
 
+  // Plegado por defecto: la barra de jugadores/moderación ocupaba una
+  // franja fija abajo de toda la pantalla incluso cuando nadie la estaba
+  // usando. Mismo patrón que el panel de ajuste del editor de avatar.
+  const [panelAbierto, setPanelAbierto] = useState(false);
   const listaJugadores = useMemo(() => Object.values(jugadores), [jugadores]);
   const yo = miSessionId ? jugadores[miSessionId] : undefined;
   const soyModerador = profile?.role === "curador" || profile?.role === "super_admin";
@@ -128,68 +132,74 @@ export default function SalaEnVivoScreen() {
       </View>
 
       <View style={styles.panel}>
-        <Text style={styles.panelTitulo}>
-          En la sala ({listaJugadores.length})
-        </Text>
-        <ScrollView style={styles.lista}>
-          {otros.length === 0 ? (
-            <Text style={styles.mutedText}>Sos el único acá por ahora.</Text>
-          ) : (
-            otros.map((j) => (
-              <View key={j.sessionId} style={styles.jugadorRow}>
-                <View style={styles.jugadorInfo}>
-                  <Text style={styles.jugadorEmail}>{j.email}</Text>
-                  <Text style={styles.jugadorRole}>
-                    {j.role}
-                    {j.congelado ? " · congelado" : ""}
-                    {j.silenciado ? " · silenciado" : ""}
-                  </Text>
-                </View>
-                {soyModerador ? (
-                  <View style={styles.acciones}>
-                    <Pressable
-                      style={styles.accionBoton}
-                      onPress={() =>
-                        moderar(j.congelado ? "descongelar" : "congelar", j.sessionId)
-                      }
-                    >
-                      <Text style={styles.accionTexto}>
-                        {j.congelado ? "❄️➡️" : "❄️"}
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      style={styles.accionBoton}
-                      onPress={() =>
-                        moderar(j.silenciado ? "habilitar" : "silenciar", j.sessionId)
-                      }
-                    >
-                      <Text style={styles.accionTexto}>
-                        {j.silenciado ? "🔇➡️" : "🔇"}
-                      </Text>
-                    </Pressable>
-                    <Pressable
-                      style={styles.accionBoton}
-                      onPress={() =>
-                        moderar("teletransportar", j.sessionId, { x: 0, z: 0 })
-                      }
-                    >
-                      <Text style={styles.accionTexto}>🎯</Text>
-                    </Pressable>
-                    <Pressable
-                      style={styles.accionBoton}
-                      onPress={() => confirmarExpulsar(j.sessionId, j.email)}
-                    >
-                      <Text style={styles.accionTexto}>🚪</Text>
-                    </Pressable>
-                  </View>
-                ) : null}
-              </View>
-            ))
-          )}
-        </ScrollView>
-        <Pressable onPress={() => navigation.goBack()}>
-          <Text style={styles.backText}>Salir de la sala</Text>
+        <Pressable
+          style={styles.panelHeader}
+          onPress={() => setPanelAbierto((v) => !v)}
+        >
+          <Text style={styles.panelTitulo}>
+            En la sala ({listaJugadores.length})
+          </Text>
+          <Text style={styles.caret}>{panelAbierto ? "▾" : "▴"}</Text>
         </Pressable>
+
+        {panelAbierto ? (
+          <ScrollView style={styles.lista}>
+            {otros.length === 0 ? (
+              <Text style={styles.mutedText}>Sos el único acá por ahora.</Text>
+            ) : (
+              otros.map((j) => (
+                <View key={j.sessionId} style={styles.jugadorRow}>
+                  <View style={styles.jugadorInfo}>
+                    <Text style={styles.jugadorEmail}>{j.email}</Text>
+                    <Text style={styles.jugadorRole}>
+                      {j.role}
+                      {j.congelado ? " · congelado" : ""}
+                      {j.silenciado ? " · silenciado" : ""}
+                    </Text>
+                  </View>
+                  {soyModerador ? (
+                    <View style={styles.acciones}>
+                      <Pressable
+                        style={styles.accionBoton}
+                        onPress={() =>
+                          moderar(j.congelado ? "descongelar" : "congelar", j.sessionId)
+                        }
+                      >
+                        <Text style={styles.accionTexto}>
+                          {j.congelado ? "❄️➡️" : "❄️"}
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        style={styles.accionBoton}
+                        onPress={() =>
+                          moderar(j.silenciado ? "habilitar" : "silenciar", j.sessionId)
+                        }
+                      >
+                        <Text style={styles.accionTexto}>
+                          {j.silenciado ? "🔇➡️" : "🔇"}
+                        </Text>
+                      </Pressable>
+                      <Pressable
+                        style={styles.accionBoton}
+                        onPress={() =>
+                          moderar("teletransportar", j.sessionId, { x: 0, z: 0 })
+                        }
+                      >
+                        <Text style={styles.accionTexto}>🎯</Text>
+                      </Pressable>
+                      <Pressable
+                        style={styles.accionBoton}
+                        onPress={() => confirmarExpulsar(j.sessionId, j.email)}
+                      >
+                        <Text style={styles.accionTexto}>🚪</Text>
+                      </Pressable>
+                    </View>
+                  ) : null}
+                </View>
+              ))
+            )}
+          </ScrollView>
+        ) : null}
       </View>
     </View>
   );
@@ -242,9 +252,17 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 6,
     borderTopWidth: 1,
     borderColor: colors.border,
+  },
+  panelHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: 10,
   },
   panelTitulo: {
     fontSize: 11,
@@ -252,7 +270,10 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textTransform: "uppercase",
     color: colors.textFaint,
-    marginBottom: 10,
+  },
+  caret: {
+    color: colors.primarySoft,
+    fontSize: 12,
   },
   lista: {
     maxHeight: 140,
@@ -292,11 +313,6 @@ const styles = StyleSheet.create({
   },
   accionTexto: {
     fontSize: 14,
-  },
-  backText: {
-    textAlign: "center",
-    color: colors.textMuted,
-    marginTop: 10,
   },
   backButton: {
     backgroundColor: colors.primary,
