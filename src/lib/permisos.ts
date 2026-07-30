@@ -45,7 +45,7 @@ export async function pedirPermisoCamara(): Promise<boolean> {
 export async function pedirPermisoMicrofono(): Promise<boolean> {
   const confirmo = await pedirConfirmacion(
     "Acceso a tu micrófono",
-    "Las salas en vivo van a usar tu micrófono para el audio espacial entre participantes. Todavía estamos construyendo esa parte — por ahora solo dejamos el permiso preparado."
+    "Las salas en vivo usan tu micrófono para que los demás participantes te escuchen."
   );
   if (!confirmo) return false;
 

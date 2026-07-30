@@ -13,6 +13,7 @@ import { useNavigation, useRoute, type RouteProp } from "@react-navigation/nativ
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuth } from "../contexts/AuthContext";
 import { useSalaRoom } from "../hooks/useSalaRoom";
+import { useVoz } from "../lib/voz";
 import SalaMultiplayer3D from "../three/SalaMultiplayer3D";
 import type { AmbienteId } from "../lib/ambientes";
 import MovementPad from "../components/MovementPad";
@@ -37,6 +38,7 @@ export default function SalaEnVivoScreen() {
   const yo = miSessionId ? jugadores[miSessionId] : undefined;
   const soyModerador = profile?.role === "curador" || profile?.role === "super_admin";
   const otros = listaJugadores.filter((j) => j.sessionId !== miSessionId);
+  const voz = useVoz(route.params.codigo, yo?.silenciado ?? false);
 
   function mimover(dx: number, dz: number) {
     if (!yo || yo.congelado) return;
@@ -117,6 +119,12 @@ export default function SalaEnVivoScreen() {
 
         <View style={styles.rotationOverlay}>
           <RotationPad onGirar={mirotar} />
+        </View>
+
+        <View style={styles.vozOverlay}>
+          <Text style={styles.vozTexto}>
+            {voz.error ? `🎙️⚠️ ${voz.error}` : voz.conectado ? (voz.micHabilitado ? "🎙️" : "🔇") : "🎙️…"}
+          </Text>
         </View>
 
         {yo?.congelado ? (
@@ -230,6 +238,22 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 16,
     bottom: 16,
+  },
+  vozOverlay: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    backgroundColor: colors.surface,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    maxWidth: 220,
+  },
+  vozTexto: {
+    color: colors.textMuted,
+    fontSize: 12,
   },
   avisoOverlay: {
     position: "absolute",

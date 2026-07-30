@@ -20,7 +20,7 @@ const wsEndpoint = process.env.EXPO_PUBLIC_COLYSEUS_URL ?? endpointPorDefecto();
 
 export const colyseusClient = new Client(wsEndpoint);
 
-function httpEndpoint() {
+export function httpEndpoint() {
   return wsEndpoint.replace(/^ws/, "http");
 }
 
