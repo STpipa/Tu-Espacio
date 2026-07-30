@@ -107,7 +107,12 @@ class LimiteDeError extends React.Component<
 
 function AccesorioPlaceholder({ color, transform }: { color: string; transform: AccesorioTransform }) {
   return (
-    <mesh position={transform.offset} rotation={[0, transform.rotacionY, 0]} castShadow>
+    <mesh
+      position={transform.offset}
+      rotation={[0, transform.rotacionY, 0]}
+      scale={transform.escala}
+      castShadow
+    >
       <boxGeometry args={[0.12, 0.5, 0.12]} />
       <meshStandardMaterial color={color} />
     </mesh>
@@ -132,7 +137,11 @@ function AccesorioModeloReal({
     return clon;
   }, [gltf, apariencia]);
   return (
-    <group position={transform.offset} rotation={[0, transform.rotacionY, 0]}>
+    <group
+      position={transform.offset}
+      rotation={[0, transform.rotacionY, 0]}
+      scale={transform.escala}
+    >
       <primitive object={escena} />
     </group>
   );

@@ -139,9 +139,14 @@ export default function AvatarEditorScreen() {
 
   const avatarConfigActual: AvatarConfig = useMemo(
     () => ({
-      capa: seleccion.capa
-        ? { id: seleccion.capa.id, nombre: seleccion.capa.nombre, model_url: seleccion.capa.model_url }
-        : null,
+      // La capa es exclusiva de curador/super_admin (ver tabsParaRol) — se
+      // fuerza acá también, no solo en la UI, para que ni la vista previa
+      // ni lo que se guarda le cuelguen una capa a un cliente (por ejemplo
+      // por un valor viejo guardado de antes de esta restricción).
+      capa:
+        esCurador && seleccion.capa
+          ? { id: seleccion.capa.id, nombre: seleccion.capa.nombre, model_url: seleccion.capa.model_url }
+          : null,
       disfraz: seleccion.disfraz
         ? {
             id: seleccion.disfraz.id,
@@ -160,7 +165,7 @@ export default function AvatarEditorScreen() {
       capaTransform,
       apariencia,
     }),
-    [seleccion, accesorioTransform, capaTransform, apariencia]
+    [seleccion, accesorioTransform, capaTransform, apariencia, esCurador]
   );
 
   const ciclar = useCallback(
