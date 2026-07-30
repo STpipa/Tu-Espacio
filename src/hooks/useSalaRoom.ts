@@ -124,8 +124,20 @@ export function useSalaRoom(codigoAcceso: string | undefined) {
           setEstado((prev) => ({ ...prev, ambiente }));
         });
 
-        room.onLeave(() => {
+        // El server desconecta al expulsado con code 4000 (ver SalaRoom.ts
+        // "expulsar"), pero antes no se avisaba nada del lado del cliente:
+        // el jugador quedaba con la pantalla de la sala intacta, mandando
+        // "mover"/"girar" a un roomRef ya nulo (silenciosamente ignorado),
+        // lo que se sentía como "congelado" sin explicación. Reusa la
+        // misma vista de error que ya existe para fallas de conexión.
+        room.onLeave((code: number, reason?: string) => {
           roomRef.current = null;
+          if (code === 4000) {
+            setEstado((prev) => ({
+              ...prev,
+              error: reason || "Te expulsó el curador de la sala.",
+            }));
+          }
         });
 
         setEstado((prev) => ({
