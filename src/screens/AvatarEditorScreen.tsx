@@ -37,7 +37,7 @@ type CatalogoPorCategoria = Record<AvatarCategoria, AvatarItem[]>;
 type Tab = AvatarCategoria | "apariencia";
 
 const CATEGORIAS: { key: AvatarCategoria; label: string; opcional: boolean }[] = [
-  { key: "capa", label: "Capa", opcional: false },
+  { key: "capa", label: "Capa", opcional: true },
   { key: "disfraz", label: "Disfraz", opcional: true },
   { key: "accesorio", label: "Accesorio", opcional: true },
 ];
@@ -119,10 +119,7 @@ export default function AvatarEditorScreen() {
 
       const inicial = profile?.avatar_config;
       setSeleccion({
-        capa:
-          agrupado.capa.find((i) => i.id === inicial?.capa?.id) ??
-          agrupado.capa[0] ??
-          null,
+        capa: agrupado.capa.find((i) => i.id === inicial?.capa?.id) ?? null,
         disfraz: agrupado.disfraz.find((i) => i.id === inicial?.disfraz?.id) ?? null,
         accesorio:
           agrupado.accesorio.find((i) => i.id === inicial?.accesorio?.id) ?? null,
@@ -179,24 +176,14 @@ export default function AvatarEditorScreen() {
           opciones.length) %
         opciones.length;
 
-      // El cuerpo renderizado usa disfraz.model_url si existe, si no
-      // capa.model_url (ver AvatarModel) — así que con un disfraz elegido,
-      // cambiar de capa no se nota en nada. Elegir una capa limpia el
-      // disfraz para que se vea de una.
-      setSeleccion((prev) => ({
-        ...prev,
-        [categoria]: opciones[siguiente],
-        ...(categoria === "capa" ? { disfraz: null } : {}),
-      }));
+      setSeleccion((prev) => ({ ...prev, [categoria]: opciones[siguiente] }));
     },
     [catalogo, seleccion]
   );
 
   function alAzar() {
     setSeleccion({
-      capa: catalogo.capa.length
-        ? catalogo.capa[Math.floor(Math.random() * catalogo.capa.length)]
-        : null,
+      capa: elegirAlAzarConNinguno(catalogo.capa),
       disfraz: elegirAlAzarConNinguno(catalogo.disfraz),
       accesorio: elegirAlAzarConNinguno(catalogo.accesorio),
     });

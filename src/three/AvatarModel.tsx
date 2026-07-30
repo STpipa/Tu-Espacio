@@ -10,6 +10,7 @@ import {
   type AccesorioTransform,
   type AvatarApariencia,
   type AvatarConfig,
+  type AvatarSeleccion,
 } from "../lib/types";
 import { colorParaNombre } from "./avatarVisuals";
 
@@ -137,71 +138,57 @@ function AccesorioModeloReal({
   );
 }
 
+// Un anexo (capa o accesorio): un modelo aparte que se dibuja junto al
+// cuerpo con su propio offset/rotación/escala, en vez de reemplazarlo. La
+// capa dejó de ser una piel alternativa del cuerpo (eso tapaba el disfraz
+// elegido, o al revés) y pasó a comportarse igual que un accesorio — se
+// puede usar junto con cualquier disfraz.
+function Anexo({
+  seleccion,
+  transform,
+  apariencia,
+}: {
+  seleccion: AvatarSeleccion;
+  transform: AccesorioTransform;
+  apariencia: AvatarApariencia;
+}) {
+  if (!seleccion) return null;
+  const color = colorParaNombre(seleccion.nombre);
+  if (!seleccion.model_url) {
+    return <AccesorioPlaceholder color={color} transform={transform} />;
+  }
+  return (
+    <LimiteDeError fallback={<AccesorioPlaceholder color={color} transform={transform} />}>
+      <Suspense fallback={<AccesorioPlaceholder color={color} transform={transform} />}>
+        <AccesorioModeloReal url={seleccion.model_url} transform={transform} apariencia={apariencia} />
+      </Suspense>
+    </LimiteDeError>
+  );
+}
+
 export default function AvatarModel({ config, position, rotation = 0 }: Props) {
-  const cuerpoNombre = config.disfraz?.nombre ?? config.capa?.nombre ?? "Traje Clásico";
+  const cuerpoNombre = config.disfraz?.nombre ?? "Traje Clásico";
   const colorCuerpo = colorParaNombre(cuerpoNombre);
-  const modelUrl = config.disfraz?.model_url ?? config.capa?.model_url ?? null;
-  // La capa (y solo la capa: si hay disfraz elegido, el disfraz manda y usa
-  // su transform identidad) puede traer un modelo subido a mano que no cae
-  // centrado/escalado bien de por sí — se ajusta con capaTransform. Merge
-  // con el default por si el config guardado es viejo y no trae `escala`.
-  const esModeloDeCapa = !config.disfraz?.model_url && !!config.capa?.model_url;
-  const capaTransform = esModeloDeCapa
-    ? { ...CAPA_TRANSFORM_DEFAULT, ...(config.capaTransform ?? {}) }
-    : CAPA_TRANSFORM_DEFAULT;
+  const modelUrl = config.disfraz?.model_url ?? null;
+  // Merge con el default por si el config guardado es viejo y no trae `escala`.
+  const capaTransform = { ...CAPA_TRANSFORM_DEFAULT, ...(config.capaTransform ?? {}) };
   const accesorioTransform = { ...ACCESORIO_TRANSFORM_DEFAULT, ...(config.accesorioTransform ?? {}) };
   const apariencia = config.apariencia ?? APARIENCIA_DEFAULT;
 
   return (
     <group position={position} rotation={[0, rotation, 0]}>
-      <group
-        position={capaTransform.offset}
-        rotation={[0, capaTransform.rotacionY, 0]}
-        scale={capaTransform.escala}
-      >
-        {modelUrl ? (
-          <LimiteDeError fallback={<CuerpoPlaceholder color={colorCuerpo} />}>
-            <Suspense fallback={<CuerpoPlaceholder color={colorCuerpo} />}>
-              <CuerpoModeloReal url={modelUrl} apariencia={apariencia} />
-            </Suspense>
-          </LimiteDeError>
-        ) : (
-          <CuerpoPlaceholder color={colorCuerpo} />
-        )}
-      </group>
+      {modelUrl ? (
+        <LimiteDeError fallback={<CuerpoPlaceholder color={colorCuerpo} />}>
+          <Suspense fallback={<CuerpoPlaceholder color={colorCuerpo} />}>
+            <CuerpoModeloReal url={modelUrl} apariencia={apariencia} />
+          </Suspense>
+        </LimiteDeError>
+      ) : (
+        <CuerpoPlaceholder color={colorCuerpo} />
+      )}
 
-      {config.accesorio ? (
-        config.accesorio.model_url ? (
-          <LimiteDeError
-            fallback={
-              <AccesorioPlaceholder
-                color={colorParaNombre(config.accesorio.nombre)}
-                transform={accesorioTransform}
-              />
-            }
-          >
-            <Suspense
-              fallback={
-                <AccesorioPlaceholder
-                  color={colorParaNombre(config.accesorio.nombre)}
-                  transform={accesorioTransform}
-                />
-              }
-            >
-              <AccesorioModeloReal
-                url={config.accesorio.model_url}
-                transform={accesorioTransform}
-                apariencia={apariencia}
-              />
-            </Suspense>
-          </LimiteDeError>
-        ) : (
-          <AccesorioPlaceholder
-            color={colorParaNombre(config.accesorio.nombre)}
-            transform={accesorioTransform}
-          />
-        )
-      ) : null}
+      <Anexo seleccion={config.capa} transform={capaTransform} apariencia={apariencia} />
+      <Anexo seleccion={config.accesorio} transform={accesorioTransform} apariencia={apariencia} />
     </group>
   );
 }
