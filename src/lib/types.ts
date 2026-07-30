@@ -86,8 +86,16 @@ export function normalizarAvatarConfig(raw: unknown): AvatarConfig {
     capa: value.capa ?? null,
     disfraz: value.disfraz ?? null,
     accesorio: value.accesorio ?? null,
-    accesorioTransform: value.accesorioTransform ?? undefined,
-    capaTransform: value.capaTransform ?? undefined,
+    // Merge con el default: un avatar_config guardado antes de que existiera
+    // `escala` (o `capaTransform`) no lo trae, y leer ese campo como
+    // undefined más adelante (ej. `transform.escala.toFixed(1)` en el panel
+    // de ajuste) tira la pantalla en blanco entera.
+    accesorioTransform: value.accesorioTransform
+      ? { ...ACCESORIO_TRANSFORM_DEFAULT, ...value.accesorioTransform }
+      : undefined,
+    capaTransform: value.capaTransform
+      ? { ...CAPA_TRANSFORM_DEFAULT, ...value.capaTransform }
+      : undefined,
     apariencia: value.apariencia ?? undefined,
   };
 }

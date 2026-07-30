@@ -45,7 +45,7 @@ export default function AccesorioAjustePanel({
   }
 
   function escalar(delta: number) {
-    onChange({ ...transform, escala: clamp(transform.escala + delta, 0.2, 3) });
+    onChange({ ...transform, escala: clamp((transform.escala ?? 1) + delta, 0.2, 3) });
   }
 
   function reiniciar() {
@@ -83,7 +83,7 @@ export default function AccesorioAjustePanel({
           <Boton texto="↻" onPress={() => girar(PASO_ROTACION)} />
         </View>
         <View style={styles.fila}>
-          <Text style={styles.etiqueta}>Tamaño ({transform.escala.toFixed(1)}×)</Text>
+          <Text style={styles.etiqueta}>Tamaño ({(transform.escala ?? 1).toFixed(1)}×)</Text>
           <Boton texto="−" onPress={() => escalar(-PASO_ESCALA)} />
           <Boton texto="+" onPress={() => escalar(PASO_ESCALA)} />
         </View>
