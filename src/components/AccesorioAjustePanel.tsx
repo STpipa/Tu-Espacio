@@ -6,20 +6,29 @@ import { colors } from "../lib/theme";
 interface Props {
   transform: AccesorioTransform;
   onChange: (transform: AccesorioTransform) => void;
+  titulo?: string;
+  valorDefecto?: AccesorioTransform;
 }
 
 const PASO_POSICION = 0.04;
 const PASO_ROTACION = Math.PI / 12; // 15°
+const PASO_ESCALA = 0.1;
 
 function clamp(v: number, min: number, max: number) {
   return Math.min(max, Math.max(min, v));
 }
 
-// Botones para reubicar el accesorio a mano (a diferencia del cuerpo, cada
-// accesorio tiene un tamaño/pivote distinto, así que un único offset fijo
-// para todos terminaba atravesando el cuerpo o tapando la cara según el
-// modelo). El ajuste queda guardado como parte del avatar.
-export default function AccesorioAjustePanel({ transform, onChange }: Props) {
+// Botones para reubicar/escalar un modelo a mano (cada uno tiene un
+// tamaño/pivote distinto — un único offset fijo para todos terminaba
+// atravesando el cuerpo o tapando la cara según el modelo). Reusado tanto
+// para accesorios como para la capa (ver AvatarEditorScreen), un modelo
+// subido por el propio usuario rara vez cae ya centrado/escalado bien.
+export default function AccesorioAjustePanel({
+  transform,
+  onChange,
+  titulo = "Ajustar accesorio",
+  valorDefecto = ACCESORIO_TRANSFORM_DEFAULT,
+}: Props) {
   function moverEje(eje: 0 | 1 | 2, delta: number) {
     const offset: [number, number, number] = [...transform.offset];
     const limites: [number, number][] = [
@@ -35,14 +44,18 @@ export default function AccesorioAjustePanel({ transform, onChange }: Props) {
     onChange({ ...transform, rotacionY: transform.rotacionY + delta });
   }
 
+  function escalar(delta: number) {
+    onChange({ ...transform, escala: clamp(transform.escala + delta, 0.2, 3) });
+  }
+
   function reiniciar() {
-    onChange({ ...ACCESORIO_TRANSFORM_DEFAULT });
+    onChange({ ...valorDefecto });
   }
 
   return (
     <View style={styles.panel}>
       <View style={styles.filaTitulo}>
-        <Text style={styles.titulo}>Ajustar accesorio</Text>
+        <Text style={styles.titulo}>{titulo}</Text>
         <Pressable onPress={reiniciar}>
           <Text style={styles.reiniciar}>Reiniciar</Text>
         </Pressable>
@@ -68,6 +81,11 @@ export default function AccesorioAjustePanel({ transform, onChange }: Props) {
           <Text style={styles.etiqueta}>Girar</Text>
           <Boton texto="↺" onPress={() => girar(-PASO_ROTACION)} />
           <Boton texto="↻" onPress={() => girar(PASO_ROTACION)} />
+        </View>
+        <View style={styles.fila}>
+          <Text style={styles.etiqueta}>Tamaño ({transform.escala.toFixed(1)}×)</Text>
+          <Boton texto="−" onPress={() => escalar(-PASO_ESCALA)} />
+          <Boton texto="+" onPress={() => escalar(PASO_ESCALA)} />
         </View>
       </View>
     </View>

@@ -16,18 +16,28 @@ export type AvatarSeleccion = {
   model_url?: string | null;
 } | null;
 
-// Offset/rotación del accesorio relativo al cuerpo, ajustable a mano por el
+// Offset/rotación/escala relativo al cuerpo, ajustable a mano por el
 // usuario (antes era un valor fijo para todos los accesorios, y como cada
 // modelo tiene un tamaño/pivote distinto terminaba atravesando el cuerpo o
-// tapando la cara según el caso).
+// tapando la cara según el caso). Mismo tipo reusado para la "capa"
+// (ver CAPA_TRANSFORM_DEFAULT) — misma necesidad, un modelo subido a mano
+// (ej. alas hechas en Blender) rara vez cae ya centrado/escalado bien.
 export interface AccesorioTransform {
   offset: [number, number, number];
   rotacionY: number;
+  escala: number;
 }
 
 export const ACCESORIO_TRANSFORM_DEFAULT: AccesorioTransform = {
   offset: [0.5, 0.9, 0.1],
   rotacionY: Math.PI / 5,
+  escala: 1,
+};
+
+export const CAPA_TRANSFORM_DEFAULT: AccesorioTransform = {
+  offset: [0, 0, 0],
+  rotacionY: 0,
+  escala: 1,
 };
 
 // Tinte/opacidad/brillo aplicado a todo el modelo (cuerpo + accesorio) —
@@ -50,6 +60,7 @@ export interface AvatarConfig {
   disfraz: AvatarSeleccion;
   accesorio: AvatarSeleccion;
   accesorioTransform?: AccesorioTransform;
+  capaTransform?: AccesorioTransform;
   apariencia?: AvatarApariencia;
 }
 
@@ -76,6 +87,7 @@ export function normalizarAvatarConfig(raw: unknown): AvatarConfig {
     disfraz: value.disfraz ?? null,
     accesorio: value.accesorio ?? null,
     accesorioTransform: value.accesorioTransform ?? undefined,
+    capaTransform: value.capaTransform ?? undefined,
     apariencia: value.apariencia ?? undefined,
   };
 }

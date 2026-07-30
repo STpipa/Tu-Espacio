@@ -25,6 +25,7 @@ import type { RootStackParamList } from "../navigation/RootNavigator";
 import {
   ACCESORIO_TRANSFORM_DEFAULT,
   APARIENCIA_DEFAULT,
+  CAPA_TRANSFORM_DEFAULT,
   type AccesorioTransform,
   type AvatarApariencia,
   type AvatarCategoria,
@@ -41,7 +42,13 @@ const CATEGORIAS: { key: AvatarCategoria; label: string; opcional: boolean }[] =
   { key: "accesorio", label: "Accesorio", opcional: true },
 ];
 
-const TABS: { key: Tab; label: string }[] = [...CATEGORIAS, { key: "apariencia", label: "Apariencia" }];
+// "Capa" queda reservada a curador/super_admin: es la identidad de
+// sanador/héroe del curador, no algo que el cliente elige. El cliente arma
+// su look entero con "Disfraz" + "Accesorio".
+function tabsParaRol(esCurador: boolean): { key: Tab; label: string }[] {
+  const categorias = esCurador ? CATEGORIAS : CATEGORIAS.filter((c) => c.key !== "capa");
+  return [...categorias, { key: "apariencia", label: "Apariencia" }];
+}
 
 // A partir de este ancho se muestra el panel de edición al costado de la
 // escena 3D (como un creador de personaje clásico); por debajo, apilado
@@ -59,6 +66,8 @@ export default function AvatarEditorScreen() {
   const { profile, refreshProfile } = useAuth();
   const { width } = useWindowDimensions();
   const layoutLateral = width >= UMBRAL_LAYOUT_LATERAL;
+  const esCurador = profile?.role === "curador" || profile?.role === "super_admin";
+  const tabs = useMemo(() => tabsParaRol(esCurador), [esCurador]);
 
   const [catalogo, setCatalogo] = useState<CatalogoPorCategoria>({
     capa: [],
@@ -74,13 +83,14 @@ export default function AvatarEditorScreen() {
     disfraz: null,
     accesorio: null,
   });
-  const [tabActiva, setTabActiva] = useState<Tab>("capa");
+  const [tabActiva, setTabActiva] = useState<Tab>(esCurador ? "capa" : "disfraz");
   const [posicion, setPosicion] = useState({ x: 0, z: 0 });
   const [rotacion, setRotacion] = useState(0);
   const [entorno, setEntorno] = useState<EnvironmentId>("noche");
   const [accesorioTransform, setAccesorioTransform] = useState<AccesorioTransform>(
     ACCESORIO_TRANSFORM_DEFAULT
   );
+  const [capaTransform, setCapaTransform] = useState<AccesorioTransform>(CAPA_TRANSFORM_DEFAULT);
   const [apariencia, setApariencia] = useState<AvatarApariencia>(APARIENCIA_DEFAULT);
 
   useEffect(() => {
@@ -118,6 +128,7 @@ export default function AvatarEditorScreen() {
           agrupado.accesorio.find((i) => i.id === inicial?.accesorio?.id) ?? null,
       });
       setAccesorioTransform(inicial?.accesorioTransform ?? ACCESORIO_TRANSFORM_DEFAULT);
+      setCapaTransform(inicial?.capaTransform ?? CAPA_TRANSFORM_DEFAULT);
       setApariencia(inicial?.apariencia ?? APARIENCIA_DEFAULT);
       setLoading(false);
     }
@@ -149,9 +160,10 @@ export default function AvatarEditorScreen() {
           }
         : null,
       accesorioTransform,
+      capaTransform,
       apariencia,
     }),
-    [seleccion, accesorioTransform, apariencia]
+    [seleccion, accesorioTransform, capaTransform, apariencia]
   );
 
   const ciclar = useCallback(
@@ -248,7 +260,7 @@ export default function AvatarEditorScreen() {
         contentContainerStyle={styles.panelContenido}
       >
         <View style={styles.tabs}>
-          {TABS.map(({ key, label }) => {
+          {tabs.map(({ key, label }) => {
             const activa = tabActiva === key;
             return (
               <Pressable
@@ -282,6 +294,15 @@ export default function AvatarEditorScreen() {
 
             {tabActiva === "accesorio" && seleccion.accesorio ? (
               <AccesorioAjustePanel transform={accesorioTransform} onChange={setAccesorioTransform} />
+            ) : null}
+
+            {tabActiva === "capa" && seleccion.capa ? (
+              <AccesorioAjustePanel
+                transform={capaTransform}
+                onChange={setCapaTransform}
+                titulo="Ajustar capa"
+                valorDefecto={CAPA_TRANSFORM_DEFAULT}
+              />
             ) : null}
           </>
         )}

@@ -6,6 +6,7 @@ import { clone as clonarConEsqueleto } from "three/examples/jsm/utils/SkeletonUt
 import {
   ACCESORIO_TRANSFORM_DEFAULT,
   APARIENCIA_DEFAULT,
+  CAPA_TRANSFORM_DEFAULT,
   type AccesorioTransform,
   type AvatarApariencia,
   type AvatarConfig,
@@ -140,20 +141,34 @@ export default function AvatarModel({ config, position, rotation = 0 }: Props) {
   const cuerpoNombre = config.disfraz?.nombre ?? config.capa?.nombre ?? "Traje Clásico";
   const colorCuerpo = colorParaNombre(cuerpoNombre);
   const modelUrl = config.disfraz?.model_url ?? config.capa?.model_url ?? null;
-  const accesorioTransform = config.accesorioTransform ?? ACCESORIO_TRANSFORM_DEFAULT;
+  // La capa (y solo la capa: si hay disfraz elegido, el disfraz manda y usa
+  // su transform identidad) puede traer un modelo subido a mano que no cae
+  // centrado/escalado bien de por sí — se ajusta con capaTransform. Merge
+  // con el default por si el config guardado es viejo y no trae `escala`.
+  const esModeloDeCapa = !config.disfraz?.model_url && !!config.capa?.model_url;
+  const capaTransform = esModeloDeCapa
+    ? { ...CAPA_TRANSFORM_DEFAULT, ...(config.capaTransform ?? {}) }
+    : CAPA_TRANSFORM_DEFAULT;
+  const accesorioTransform = { ...ACCESORIO_TRANSFORM_DEFAULT, ...(config.accesorioTransform ?? {}) };
   const apariencia = config.apariencia ?? APARIENCIA_DEFAULT;
 
   return (
     <group position={position} rotation={[0, rotation, 0]}>
-      {modelUrl ? (
-        <LimiteDeError fallback={<CuerpoPlaceholder color={colorCuerpo} />}>
-          <Suspense fallback={<CuerpoPlaceholder color={colorCuerpo} />}>
-            <CuerpoModeloReal url={modelUrl} apariencia={apariencia} />
-          </Suspense>
-        </LimiteDeError>
-      ) : (
-        <CuerpoPlaceholder color={colorCuerpo} />
-      )}
+      <group
+        position={capaTransform.offset}
+        rotation={[0, capaTransform.rotacionY, 0]}
+        scale={capaTransform.escala}
+      >
+        {modelUrl ? (
+          <LimiteDeError fallback={<CuerpoPlaceholder color={colorCuerpo} />}>
+            <Suspense fallback={<CuerpoPlaceholder color={colorCuerpo} />}>
+              <CuerpoModeloReal url={modelUrl} apariencia={apariencia} />
+            </Suspense>
+          </LimiteDeError>
+        ) : (
+          <CuerpoPlaceholder color={colorCuerpo} />
+        )}
+      </group>
 
       {config.accesorio ? (
         config.accesorio.model_url ? (

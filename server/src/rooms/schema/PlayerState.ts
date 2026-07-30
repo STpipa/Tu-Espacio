@@ -12,9 +12,10 @@ export class PlayerState extends Schema {
   @type("string") capaNombre = "";
   @type("string") disfrazNombre = "";
   @type("string") accesorioNombre = "";
-  // JSON de AccesorioTransform ({offset:[x,y,z], rotacionY}) o "" para usar
-  // el default del cliente — se manda como string en vez de sumar 4 campos
-  // numéricos al schema, mismo criterio que avatar_config del lado de
-  // Supabase (un blob JSON en vez de columnas nuevas por cada dato chico).
+  // JSON de AccesorioTransform ({offset:[x,y,z], rotacionY, escala}) o ""
+  // para usar el default del cliente — se manda como string en vez de sumar
+  // campos numéricos al schema, mismo criterio que avatar_config del lado
+  // de Supabase (un blob JSON en vez de columnas nuevas por cada dato chico).
   @type("string") accesorioTransform = "";
+  @type("string") capaTransform = "";
 }

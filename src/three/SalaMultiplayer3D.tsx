@@ -13,7 +13,7 @@ import type { JugadorSala } from "../hooks/useSalaRoom";
 import type { AccesorioTransform, AvatarConfig } from "../lib/types";
 import { obtenerCatalogoAvatares, mapaModelUrlPorNombre } from "../lib/catalogoAvatares";
 
-function parsearAccesorioTransform(json: string): AccesorioTransform | undefined {
+function parsearTransform(json: string): AccesorioTransform | undefined {
   if (!json) return undefined;
   try {
     const valor = JSON.parse(json);
@@ -61,7 +61,8 @@ function avatarConfigDeJugador(
           model_url: modelUrlPorNombre[j.accesorioNombre],
         }
       : null,
-    accesorioTransform: parsearAccesorioTransform(j.accesorioTransform),
+    accesorioTransform: parsearTransform(j.accesorioTransform),
+    capaTransform: parsearTransform(j.capaTransform),
   };
 }
 
