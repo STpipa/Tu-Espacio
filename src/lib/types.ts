@@ -30,11 +30,27 @@ export const ACCESORIO_TRANSFORM_DEFAULT: AccesorioTransform = {
   rotacionY: Math.PI / 5,
 };
 
+// Tinte/opacidad/brillo aplicado a todo el modelo (cuerpo + accesorio) —
+// para representar ausentes (opacidad baja), figuras energéticas (brillo),
+// o simplemente un color a gusto. `color: null` = sin tinte.
+export interface AvatarApariencia {
+  color: string | null;
+  opacidad: number;
+  brillo: number;
+}
+
+export const APARIENCIA_DEFAULT: AvatarApariencia = {
+  color: null,
+  opacidad: 1,
+  brillo: 0,
+};
+
 export interface AvatarConfig {
   capa: AvatarSeleccion;
   disfraz: AvatarSeleccion;
   accesorio: AvatarSeleccion;
   accesorioTransform?: AccesorioTransform;
+  apariencia?: AvatarApariencia;
 }
 
 export interface Profile {
@@ -60,5 +76,6 @@ export function normalizarAvatarConfig(raw: unknown): AvatarConfig {
     disfraz: value.disfraz ?? null,
     accesorio: value.accesorio ?? null,
     accesorioTransform: value.accesorioTransform ?? undefined,
+    apariencia: value.apariencia ?? undefined,
   };
 }

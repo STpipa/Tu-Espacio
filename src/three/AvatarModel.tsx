@@ -1,8 +1,15 @@
 import React, { Suspense, useMemo } from "react";
 import { useLoader } from "@react-three/fiber";
+import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { clone as clonarConEsqueleto } from "three/examples/jsm/utils/SkeletonUtils.js";
-import { ACCESORIO_TRANSFORM_DEFAULT, type AccesorioTransform, type AvatarConfig } from "../lib/types";
+import {
+  ACCESORIO_TRANSFORM_DEFAULT,
+  APARIENCIA_DEFAULT,
+  type AccesorioTransform,
+  type AvatarApariencia,
+  type AvatarConfig,
+} from "../lib/types";
 import { colorParaNombre } from "./avatarVisuals";
 
 interface Props {
@@ -11,6 +18,34 @@ interface Props {
   // Hacia dónde mira el avatar (radianes, eje Y). 0 = orientación original
   // del modelo.
   rotation?: number;
+}
+
+// Tinte/opacidad/brillo sobre todos los materiales del modelo — clona cada
+// material primero (si no, dos avatares con el mismo modelo comparten
+// material y uno le pinta el color al otro). `color` tiñe multiplicando
+// sobre la textura existente (no la reemplaza), es el comportamiento
+// estándar de `material.color` en three.js cuando hay un `map`.
+function aplicarApariencia(escena: THREE.Object3D, apariencia: AvatarApariencia) {
+  const { color, opacidad, brillo } = apariencia;
+  if (!color && opacidad >= 1 && brillo <= 0) return;
+
+  escena.traverse((obj) => {
+    const mesh = obj as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const materiales = (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).map((m) =>
+      (m as THREE.MeshStandardMaterial).clone()
+    );
+    mesh.material = materiales.length === 1 ? materiales[0] : materiales;
+    for (const mat of materiales) {
+      if (color) mat.color.set(color);
+      mat.transparent = opacidad < 1;
+      mat.opacity = opacidad;
+      if (brillo > 0) {
+        mat.emissive = new THREE.Color(color ?? mat.color);
+        mat.emissiveIntensity = brillo;
+      }
+    }
+  });
 }
 
 // Placeholder mientras no haya (o falle la carga de) un modelo .glb real:
@@ -31,7 +66,7 @@ function CuerpoPlaceholder({ color }: { color: string }) {
   );
 }
 
-function CuerpoModeloReal({ url }: { url: string }) {
+function CuerpoModeloReal({ url, apariencia }: { url: string; apariencia: AvatarApariencia }) {
   const gltf = useLoader(GLTFLoader, url);
   // Clonado: si dos avatares usan el mismo modelo, cada uno necesita su
   // propia instancia de escena (three.js no permite un Object3D con dos
@@ -42,7 +77,11 @@ function CuerpoModeloReal({ url }: { url: string }) {
   // el grupo padre se mueva o gire (el accesorio, sin huesos, sí se
   // clona bien y por eso se movía solo). `SkeletonUtils.clone` remapea los
   // huesos a la copia clonada correctamente.
-  const escena = useMemo(() => clonarConEsqueleto(gltf.scene), [gltf]);
+  const escena = useMemo(() => {
+    const clon = clonarConEsqueleto(gltf.scene);
+    aplicarApariencia(clon, apariencia);
+    return clon;
+  }, [gltf, apariencia]);
   return <primitive object={escena} />;
 }
 
@@ -73,11 +112,23 @@ function AccesorioPlaceholder({ color, transform }: { color: string; transform: 
   );
 }
 
-function AccesorioModeloReal({ url, transform }: { url: string; transform: AccesorioTransform }) {
+function AccesorioModeloReal({
+  url,
+  transform,
+  apariencia,
+}: {
+  url: string;
+  transform: AccesorioTransform;
+  apariencia: AvatarApariencia;
+}) {
   const gltf = useLoader(GLTFLoader, url);
   // Mismo motivo que en CuerpoModeloReal — por las dudas de que algún
   // accesorio venga riggeado en vez de ser un mesh estático simple.
-  const escena = useMemo(() => clonarConEsqueleto(gltf.scene), [gltf]);
+  const escena = useMemo(() => {
+    const clon = clonarConEsqueleto(gltf.scene);
+    aplicarApariencia(clon, apariencia);
+    return clon;
+  }, [gltf, apariencia]);
   return (
     <group position={transform.offset} rotation={[0, transform.rotacionY, 0]}>
       <primitive object={escena} />
@@ -90,13 +141,14 @@ export default function AvatarModel({ config, position, rotation = 0 }: Props) {
   const colorCuerpo = colorParaNombre(cuerpoNombre);
   const modelUrl = config.disfraz?.model_url ?? config.capa?.model_url ?? null;
   const accesorioTransform = config.accesorioTransform ?? ACCESORIO_TRANSFORM_DEFAULT;
+  const apariencia = config.apariencia ?? APARIENCIA_DEFAULT;
 
   return (
     <group position={position} rotation={[0, rotation, 0]}>
       {modelUrl ? (
         <LimiteDeError fallback={<CuerpoPlaceholder color={colorCuerpo} />}>
           <Suspense fallback={<CuerpoPlaceholder color={colorCuerpo} />}>
-            <CuerpoModeloReal url={modelUrl} />
+            <CuerpoModeloReal url={modelUrl} apariencia={apariencia} />
           </Suspense>
         </LimiteDeError>
       ) : (
@@ -121,7 +173,11 @@ export default function AvatarModel({ config, position, rotation = 0 }: Props) {
                 />
               }
             >
-              <AccesorioModeloReal url={config.accesorio.model_url} transform={accesorioTransform} />
+              <AccesorioModeloReal
+                url={config.accesorio.model_url}
+                transform={accesorioTransform}
+                apariencia={apariencia}
+              />
             </Suspense>
           </LimiteDeError>
         ) : (

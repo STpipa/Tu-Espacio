@@ -19,23 +19,29 @@ import type { EnvironmentId } from "../three/Environment";
 import MovementPad from "../components/MovementPad";
 import RotationPad from "../components/RotationPad";
 import AccesorioAjustePanel from "../components/AccesorioAjustePanel";
+import AparienciaPanel from "../components/AparienciaPanel";
 import EnvironmentPicker from "../components/EnvironmentPicker";
 import type { RootStackParamList } from "../navigation/RootNavigator";
 import {
   ACCESORIO_TRANSFORM_DEFAULT,
+  APARIENCIA_DEFAULT,
   type AccesorioTransform,
+  type AvatarApariencia,
   type AvatarCategoria,
   type AvatarConfig,
   type AvatarItem,
 } from "../lib/types";
 
 type CatalogoPorCategoria = Record<AvatarCategoria, AvatarItem[]>;
+type Tab = AvatarCategoria | "apariencia";
 
 const CATEGORIAS: { key: AvatarCategoria; label: string; opcional: boolean }[] = [
   { key: "capa", label: "Capa", opcional: false },
   { key: "disfraz", label: "Disfraz", opcional: true },
   { key: "accesorio", label: "Accesorio", opcional: true },
 ];
+
+const TABS: { key: Tab; label: string }[] = [...CATEGORIAS, { key: "apariencia", label: "Apariencia" }];
 
 // A partir de este ancho se muestra el panel de edición al costado de la
 // escena 3D (como un creador de personaje clásico); por debajo, apilado
@@ -68,13 +74,14 @@ export default function AvatarEditorScreen() {
     disfraz: null,
     accesorio: null,
   });
-  const [tabActiva, setTabActiva] = useState<AvatarCategoria>("capa");
+  const [tabActiva, setTabActiva] = useState<Tab>("capa");
   const [posicion, setPosicion] = useState({ x: 0, z: 0 });
   const [rotacion, setRotacion] = useState(0);
   const [entorno, setEntorno] = useState<EnvironmentId>("noche");
   const [accesorioTransform, setAccesorioTransform] = useState<AccesorioTransform>(
     ACCESORIO_TRANSFORM_DEFAULT
   );
+  const [apariencia, setApariencia] = useState<AvatarApariencia>(APARIENCIA_DEFAULT);
 
   useEffect(() => {
     let isMounted = true;
@@ -111,6 +118,7 @@ export default function AvatarEditorScreen() {
           agrupado.accesorio.find((i) => i.id === inicial?.accesorio?.id) ?? null,
       });
       setAccesorioTransform(inicial?.accesorioTransform ?? ACCESORIO_TRANSFORM_DEFAULT);
+      setApariencia(inicial?.apariencia ?? APARIENCIA_DEFAULT);
       setLoading(false);
     }
 
@@ -141,8 +149,9 @@ export default function AvatarEditorScreen() {
           }
         : null,
       accesorioTransform,
+      apariencia,
     }),
-    [seleccion, accesorioTransform]
+    [seleccion, accesorioTransform, apariencia]
   );
 
   const ciclar = useCallback(
@@ -239,7 +248,7 @@ export default function AvatarEditorScreen() {
         contentContainerStyle={styles.panelContenido}
       >
         <View style={styles.tabs}>
-          {CATEGORIAS.map(({ key, label }) => {
+          {TABS.map(({ key, label }) => {
             const activa = tabActiva === key;
             return (
               <Pressable
@@ -253,23 +262,29 @@ export default function AvatarEditorScreen() {
           })}
         </View>
 
-        <View style={styles.selectorRow}>
-          <Pressable style={styles.arrow} onPress={() => ciclar(tabActiva, -1)}>
-            <Text style={styles.arrowText}>◀</Text>
-          </Pressable>
-          <View style={styles.selectorLabel}>
-            <Text style={styles.selectorNombre}>
-              {seleccion[tabActiva]?.nombre ?? "Ninguno"}
-            </Text>
-          </View>
-          <Pressable style={styles.arrow} onPress={() => ciclar(tabActiva, 1)}>
-            <Text style={styles.arrowText}>▶</Text>
-          </Pressable>
-        </View>
+        {tabActiva === "apariencia" ? (
+          <AparienciaPanel value={apariencia} onChange={setApariencia} />
+        ) : (
+          <>
+            <View style={styles.selectorRow}>
+              <Pressable style={styles.arrow} onPress={() => ciclar(tabActiva, -1)}>
+                <Text style={styles.arrowText}>◀</Text>
+              </Pressable>
+              <View style={styles.selectorLabel}>
+                <Text style={styles.selectorNombre}>
+                  {seleccion[tabActiva]?.nombre ?? "Ninguno"}
+                </Text>
+              </View>
+              <Pressable style={styles.arrow} onPress={() => ciclar(tabActiva, 1)}>
+                <Text style={styles.arrowText}>▶</Text>
+              </Pressable>
+            </View>
 
-        {tabActiva === "accesorio" && seleccion.accesorio ? (
-          <AccesorioAjustePanel transform={accesorioTransform} onChange={setAccesorioTransform} />
-        ) : null}
+            {tabActiva === "accesorio" && seleccion.accesorio ? (
+              <AccesorioAjustePanel transform={accesorioTransform} onChange={setAccesorioTransform} />
+            ) : null}
+          </>
+        )}
 
         {errorMsg ? <Text style={styles.error}>{errorMsg}</Text> : null}
         {savedMsg ? <Text style={styles.saved}>{savedMsg}</Text> : null}
