@@ -179,7 +179,15 @@ export default function AvatarEditorScreen() {
           opciones.length) %
         opciones.length;
 
-      setSeleccion((prev) => ({ ...prev, [categoria]: opciones[siguiente] }));
+      // El cuerpo renderizado usa disfraz.model_url si existe, si no
+      // capa.model_url (ver AvatarModel) — así que con un disfraz elegido,
+      // cambiar de capa no se nota en nada. Elegir una capa limpia el
+      // disfraz para que se vea de una.
+      setSeleccion((prev) => ({
+        ...prev,
+        [categoria]: opciones[siguiente],
+        ...(categoria === "capa" ? { disfraz: null } : {}),
+      }));
     },
     [catalogo, seleccion]
   );

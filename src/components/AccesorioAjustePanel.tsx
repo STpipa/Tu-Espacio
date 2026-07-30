@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { ACCESORIO_TRANSFORM_DEFAULT, type AccesorioTransform } from "../lib/types";
 import { colors } from "../lib/theme";
@@ -23,12 +23,17 @@ function clamp(v: number, min: number, max: number) {
 // atravesando el cuerpo o tapando la cara según el modelo). Reusado tanto
 // para accesorios como para la capa (ver AvatarEditorScreen), un modelo
 // subido por el propio usuario rara vez cae ya centrado/escalado bien.
+// Plegado por defecto: los ejes X/Y/Z + girar/tamaño entran en 2 filas de
+// grilla en vez de 5 apiladas, y encima ocultas hasta que se tocan — mockup
+// aprobado por el usuario: https://claude.ai/code/artifact/59570559
 export default function AccesorioAjustePanel({
   transform,
   onChange,
   titulo = "Ajustar accesorio",
   valorDefecto = ACCESORIO_TRANSFORM_DEFAULT,
 }: Props) {
+  const [abierto, setAbierto] = useState(false);
+
   function moverEje(eje: 0 | 1 | 2, delta: number) {
     const offset: [number, number, number] = [...transform.offset];
     const limites: [number, number][] = [
@@ -54,39 +59,57 @@ export default function AccesorioAjustePanel({
 
   return (
     <View style={styles.panel}>
-      <View style={styles.filaTitulo}>
-        <Text style={styles.titulo}>{titulo}</Text>
-        <Pressable onPress={reiniciar}>
-          <Text style={styles.reiniciar}>Reiniciar</Text>
-        </Pressable>
-      </View>
+      <Pressable style={styles.filaTitulo} onPress={() => setAbierto((v) => !v)}>
+        <Text style={styles.titulo}>⚙ {titulo}</Text>
+        <Text style={styles.caret}>{abierto ? "▴" : "▾"}</Text>
+      </Pressable>
 
-      <View style={styles.filas}>
-        <View style={styles.fila}>
-          <Text style={styles.etiqueta}>Izq / Der</Text>
-          <Boton texto="◀" onPress={() => moverEje(0, -PASO_POSICION)} />
-          <Boton texto="▶" onPress={() => moverEje(0, PASO_POSICION)} />
+      {abierto ? (
+        <View style={styles.cuerpo}>
+          <Pressable onPress={reiniciar} style={styles.filaReiniciar}>
+            <Text style={styles.reiniciar}>Reiniciar</Text>
+          </Pressable>
+
+          <View style={styles.grid3}>
+            <Eje label="Izq/Der" iconoA="◀" iconoB="▶" onA={() => moverEje(0, -PASO_POSICION)} onB={() => moverEje(0, PASO_POSICION)} />
+            <Eje label="Alto" iconoA="▲" iconoB="▼" onA={() => moverEje(1, PASO_POSICION)} onB={() => moverEje(1, -PASO_POSICION)} />
+            <Eje label="Prof." iconoA="◀" iconoB="▶" onA={() => moverEje(2, -PASO_POSICION)} onB={() => moverEje(2, PASO_POSICION)} />
+          </View>
+          <View style={styles.grid2}>
+            <Eje label="Girar" iconoA="↺" iconoB="↻" onA={() => girar(-PASO_ROTACION)} onB={() => girar(PASO_ROTACION)} />
+            <Eje
+              label={`Tamaño ${(transform.escala ?? 1).toFixed(1)}×`}
+              iconoA="−"
+              iconoB="+"
+              onA={() => escalar(-PASO_ESCALA)}
+              onB={() => escalar(PASO_ESCALA)}
+            />
+          </View>
         </View>
-        <View style={styles.fila}>
-          <Text style={styles.etiqueta}>Arriba / Abajo</Text>
-          <Boton texto="▲" onPress={() => moverEje(1, PASO_POSICION)} />
-          <Boton texto="▼" onPress={() => moverEje(1, -PASO_POSICION)} />
-        </View>
-        <View style={styles.fila}>
-          <Text style={styles.etiqueta}>Adelante / Atrás</Text>
-          <Boton texto="◀" onPress={() => moverEje(2, -PASO_POSICION)} />
-          <Boton texto="▶" onPress={() => moverEje(2, PASO_POSICION)} />
-        </View>
-        <View style={styles.fila}>
-          <Text style={styles.etiqueta}>Girar</Text>
-          <Boton texto="↺" onPress={() => girar(-PASO_ROTACION)} />
-          <Boton texto="↻" onPress={() => girar(PASO_ROTACION)} />
-        </View>
-        <View style={styles.fila}>
-          <Text style={styles.etiqueta}>Tamaño ({(transform.escala ?? 1).toFixed(1)}×)</Text>
-          <Boton texto="−" onPress={() => escalar(-PASO_ESCALA)} />
-          <Boton texto="+" onPress={() => escalar(PASO_ESCALA)} />
-        </View>
+      ) : null}
+    </View>
+  );
+}
+
+function Eje({
+  label,
+  iconoA,
+  iconoB,
+  onA,
+  onB,
+}: {
+  label: string;
+  iconoA: string;
+  iconoB: string;
+  onA: () => void;
+  onB: () => void;
+}) {
+  return (
+    <View style={styles.celda}>
+      <Text style={styles.celdaEtiqueta}>{label}</Text>
+      <View style={styles.celdaPar}>
+        <Boton texto={iconoA} onPress={onA} />
+        <Boton texto={iconoB} onPress={onB} />
       </View>
     </View>
   );
@@ -106,51 +129,77 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: 12,
     marginTop: 8,
-    gap: 8,
+    overflow: "hidden",
   },
   filaTitulo: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   titulo: {
     fontSize: 12,
     fontWeight: "700",
-    color: colors.textMuted,
+    color: colors.text,
     textTransform: "uppercase",
     letterSpacing: 0.5,
+  },
+  caret: {
+    color: colors.primarySoft,
+    fontSize: 12,
+  },
+  cuerpo: {
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+    gap: 6,
+  },
+  filaReiniciar: {
+    alignItems: "flex-end",
   },
   reiniciar: {
     fontSize: 12,
     color: colors.primarySoft,
   },
-  filas: {
+  grid3: {
+    flexDirection: "row",
     gap: 6,
   },
-  fila: {
+  grid2: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    gap: 6,
   },
-  etiqueta: {
+  celda: {
     flex: 1,
-    fontSize: 12,
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    paddingVertical: 8,
+    alignItems: "center",
+    gap: 6,
+  },
+  celdaEtiqueta: {
+    fontSize: 10,
+    fontWeight: "700",
     color: colors.textFaint,
+    textTransform: "uppercase",
+  },
+  celdaPar: {
+    flexDirection: "row",
+    gap: 6,
   },
   boton: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: colors.surface,
+    width: 28,
+    height: 28,
+    borderRadius: 7,
+    backgroundColor: colors.surfaceElevated,
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
   },
   botonTexto: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.primarySoft,
   },
 });
